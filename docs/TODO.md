@@ -1,0 +1,58 @@
+# TODO - build phases
+
+Status: [ ] todo, [~] in progress, [x] done
+
+## Phase 1 - Scaffold
+
+- [x] Docs (README, ARCHITECTURE, DECISIONS, FLOWS, DATABASE, TODO, COOLIFY)
+- [x] SvelteKit + Tailwind 4 scaffold in `panel/`
+- [x] Drizzle + Postgres schema (see DATABASE.md)
+- [x] better-auth setup
+- [x] Base UI components (Button, Card, Badge, Input, Toggle, Dialog)
+- [x] Landing, login, register, dashboard, create wizard, server detail tabs
+
+## Phase 2 - Agent
+
+- [x] Rust axum skeleton in `agent/`
+- [x] Docker lifecycle: create/start/stop/delete/status (bollard)
+- [x] Reconcile loop
+- [x] pumpkin.toml + whitelist.json generator from settings jsonb
+- [x] Routing via container labels (mc-router discovery)
+
+## Phase 3 - Deploy
+
+- [x] docker-compose.yml (panel, agent, postgres, router)
+- [x] Dockerfile panel (adapter-node), Dockerfile agent (multi-stage)
+- [x] Panel production build verified in Docker
+- [x] E2E verified locally: wizard create -> agent -> container -> mc-router route ->
+      real Minecraft status ping returns our MOTD/max-players; power stop/start;
+      settings apply; delete; orphan cleanup; reconcile fail-safe
+- [ ] Coolify deploy + docs/COOLIFY.md verified on real server
+- [ ] Wildcard DNS check
+
+## Phase 4 - Panel UI
+
+- [ ] Landing + pricing (F1)
+- [ ] Auth pages (F2)
+- [ ] Dashboard + server cards (F3, F5)
+- [ ] Create wizard (F4, Stripe part mocked until Phase 5)
+- [ ] Server detail tabs (F6)
+
+## Phase 5 - Stripe
+
+- [ ] Checkout session on create
+- [ ] Webhook: activate, suspend, reactivate (F7, F8)
+- [ ] Customer portal link
+
+## Phase 6 - World download
+
+- [ ] Agent: zip volume endpoint
+- [ ] Panel: download button (F6 World tab)
+
+## Phase 7 - Hardening
+
+- [ ] Auto-sleep (F10)
+- [ ] Admin page (F12)
+- [ ] Load test with bot clients on real hardware; set final plan limits
+- [ ] Reserved subdomain list finalized
+- [ ] Backups job (world volumes -> S3)

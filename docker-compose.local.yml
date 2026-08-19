@@ -1,0 +1,9 @@
+# Local development only. Coolify deploys only docker-compose.yml.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+services:
+  panel:
+    ports:
+      - '3000:3000'
+  agent:
+    ports:
+      - '127.0.0.1:3001:3001'

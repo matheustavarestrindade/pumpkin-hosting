@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: hostingmc
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d hostingmc']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  panel:
+    build: ./panel
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/hostingmc
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
+      PUBLIC_BASE_DOMAIN: ${PUBLIC_BASE_DOMAIN:?}
+      AGENT_TOKEN: ${AGENT_TOKEN:?}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-}
+      ORIGIN: ${BETTER_AUTH_URL:?}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  agent:
+    build: ./agent
+    restart: unless-stopped
+    environment:
+      AGENT_TOKEN: ${AGENT_TOKEN:?}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/hostingmc
+      NODE_ID: ${NODE_ID:?}
+      MC_NETWORK: mc-net
+      BASE_DOMAIN: ${PUBLIC_BASE_DOMAIN:?}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  router:
+    image: itzg/mc-router:latest
+    restart: unless-stopped
+    user: root
+    command: ['--in-docker']
+    ports:
+      - '25565:25565'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - default
+      - mc-net
+
+networks:
+  mc-net:
+    name: mc-net
+
+volumes:
+  pgdata:
