@@ -1,19 +1,22 @@
 import { agent } from '$lib/server/agent';
 import { db } from '$lib/server/db';
 import { nodes, plans, servers } from '$lib/server/db/schema';
+import { requireUser } from '$lib/server/guard';
 import { defaultSettings } from '$lib/server-settings';
 import { validateSubdomain } from '$lib/subdomains';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
+	requireUser(locals);
 	const [plan] = await db.select().from(plans).where(eq(plans.active, true)).limit(1);
 	return { plan: plan ?? null };
 };
 
 export const actions: Actions = {
 	create: async ({ request, locals }) => {
+		const user = requireUser(locals);
 		const form = await request.formData();
 		const subdomain = String(form.get('subdomain') ?? '').toLowerCase();
 		const name = String(form.get('name') ?? '').trim();
@@ -63,7 +66,7 @@ export const actions: Actions = {
 		// the server row after the webhook confirms payment.
 		await db.insert(servers).values({
 			id,
-			userId: locals.user!.id,
+			userId: user.id,
 			nodeId: node.id,
 			planId: plan.id,
 			name,

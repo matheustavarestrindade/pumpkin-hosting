@@ -1,7 +1,7 @@
 use axum::{
     Json, Router,
     extract::{Path, State},
-    http::StatusCode,
+    http::{StatusCode, header},
     middleware,
     response::IntoResponse,
     routing::{delete, get, post, put},
@@ -21,6 +21,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/servers/{id}", delete(delete_server))
         .route("/servers/{id}/settings", put(apply_settings))
         .route("/servers/{id}/status", get(server_status))
+        .route("/servers/{id}/world.zip", get(download_world))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             crate::auth::require_token,
@@ -133,6 +134,28 @@ async fn server_status(
         None => "missing",
     };
     Json(serde_json::json!({ "status": status, "playersOnline": null }))
+}
+
+async fn download_world(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<uuid::Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let row = crate::db::get_server(&state.db, id).await.map_err(internal)?;
+    let zip = docker::download_world_zip(&state.docker, id)
+        .await
+        .map_err(internal)?;
+
+    let filename = format!("{}-world.zip", row.subdomain);
+    Ok((
+        [
+            (header::CONTENT_TYPE, "application/zip".to_string()),
+            (
+                header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{filename}\""),
+            ),
+        ],
+        zip,
+    ))
 }
 
 // ---------- helpers ----------

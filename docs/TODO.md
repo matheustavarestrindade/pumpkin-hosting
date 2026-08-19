@@ -46,8 +46,10 @@ Status: [ ] todo, [~] in progress, [x] done
 
 ## Phase 6 - World download
 
-- [ ] Agent: zip volume endpoint
-- [ ] Panel: download button (F6 World tab)
+- [x] Agent: zip volume endpoint (tar from container -> zip stream)
+- [x] Panel: download button (F6 World tab)
+- [x] Route protection audit: requireUser + ownership filter on every action,
+      cross-user and anonymous tested (404 / redirect)
 
 ## Phase 7 - Hardening
 

@@ -61,6 +61,17 @@ Browser --https--> panel (SvelteKit) --> Postgres
 | stack internal | panel, agent, postgres, router | service-to-service by name |
 | mc-net | router + game containers | game traffic, fixed name `mc-net` |
 
+## Security model
+
+- Every panel load/action/endpoint calls `requireUser(locals)` (redirects to /login).
+  SvelteKit layout guards alone do NOT protect form actions - never rely on them.
+- Every server-scoped query filters by `user_id` (getOwnedServer). Another user's
+  server returns 404, not 403 - existence is not leaked.
+- The agent trusts only the shared `AGENT_TOKEN` (internal network, never public).
+  User-level authorization lives in the panel only.
+- Only the agent mounts the Docker socket rw; router mounts it read-only.
+- `/api/subdomain` returns 401 JSON for anonymous callers (it is a JSON API).
+
 ## Reconcile loop (orphan protection)
 
 The agent runs this every 60 seconds and once at startup:

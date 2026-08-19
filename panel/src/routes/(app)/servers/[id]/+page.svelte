@@ -168,11 +168,15 @@
 		<Card>
 			<h3 class="font-semibold text-mc-text">Download your world</h3>
 			<p class="mt-1.5 text-sm text-mc-muted">
-				Get a full copy of your world as a zip file. The server pauses for a moment while we pack it.
+				Get a full copy of your world as a zip file. Works even while the server is stopped.
 			</p>
 			<div class="mt-4">
-				<Button variant="secondary" disabled title="Available soon">Download world</Button>
-				<p class="mt-2 text-xs text-mc-muted">Available soon.</p>
+				<a
+					href="/servers/{data.server.id}/world.zip"
+					class="inline-flex items-center justify-center gap-2 rounded-lg border border-mc-border bg-mc-surface px-4 py-2 text-sm font-medium text-mc-text transition-colors hover:bg-mc-border/50"
+				>
+					Download world
+				</a>
 			</div>
 		</Card>
 	{/if}

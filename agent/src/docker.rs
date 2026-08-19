@@ -239,8 +239,71 @@ pub async fn remove(docker: &bollard::Docker, server_id: uuid::Uuid) -> Result<(
         .await
 }
 
-pub async fn is_running(docker: &bollard::Docker, server_id: uuid::Uuid) -> Option<bool> {
-    let info = docker
+/// Downloads /pumpkin from the container as a tar and re-packs it as a zip.
+/// Works on stopped containers. v1: buffers in memory (worlds are small on our plans).
+pub async fn download_world_zip(
+    docker: &bollard::Docker,
+    server_id: uuid::Uuid,
+) -> Result<Vec<u8>, bollard::errors::Error> {
+    use bollard::query_parameters::DownloadFromContainerOptionsBuilder;
+    use futures_util::StreamExt;
+
+    let mut stream = docker.download_from_container(
+        &container_name(server_id),
+        Some(DownloadFromContainerOptionsBuilder::default().path("/pumpkin").build()),
+    );
+
+    let mut tar_bytes = Vec::new();
+    while let Some(chunk) = stream.next().await {
+        tar_bytes.extend_from_slice(&chunk?);
+    }
+
+    let tar_bytes = std::sync::Arc::new(tar_bytes);
+    let tar_clone = tar_bytes.clone();
+    tokio::task::spawn_blocking(move || tar_to_zip(&tar_clone))
+        .await
+        .expect("zip task")
+        .map_err(|msg| bollard::errors::Error::DockerResponseServerError {
+            status_code: 500,
+            message: msg,
+        })
+}
+
+fn tar_to_zip(tar_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    use std::io::{Read, Write};
+
+    let mut archive = tar::Archive::new(tar_bytes);
+    let mut zip_writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    let options = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+
+    let entries = archive.entries().map_err(|e| e.to_string())?;
+    for entry in entries {
+        let mut entry = entry.map_err(|e| e.to_string())?;
+        if !entry.header().entry_type().is_file() {
+            continue;
+        }
+        let path = entry.path().map_err(|e| e.to_string())?.to_path_buf();
+        let path_str = path.to_string_lossy().to_string();
+        // tar from docker prefixes with the folder name: "pumpkin/..."
+        let rel = path_str
+            .strip_prefix("pumpkin/")
+            .unwrap_or(&path_str)
+            .to_string();
+        if rel.is_empty() {
+            continue;
+        }
+        let mut content = Vec::new();
+        entry.read_to_end(&mut content).map_err(|e| e.to_string())?;
+        zip_writer.start_file(rel, options).map_err(|e| e.to_string())?;
+        zip_writer.write_all(&content).map_err(|e| e.to_string())?;
+    }
+
+    let cursor = zip_writer.finish().map_err(|e| e.to_string())?;
+    Ok(cursor.into_inner())
+}
+
+pub async fn is_running(docker: &bollard::Docker, server_id: uuid::Uuid) -> Option<bool> {    let info = docker
         .inspect_container(&container_name(server_id), None::<InspectContainerOptions>)
         .await
         .ok()?;

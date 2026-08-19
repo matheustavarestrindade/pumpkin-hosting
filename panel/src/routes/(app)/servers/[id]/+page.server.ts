@@ -1,3 +1,4 @@
+import { requireUser } from '$lib/server/guard';
 import { agent } from '$lib/server/agent';
 import { db } from '$lib/server/db';
 import { nodes, servers, type ServerSettings } from '$lib/server/db/schema';
@@ -17,13 +18,13 @@ async function getOwnedServer(id: string, userId: string) {
 }
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const { server } = await getOwnedServer(params.id, locals.user!.id);
+	const { server } = await getOwnedServer(params.id, requireUser(locals).id);
 	return { server };
 };
 
 export const actions: Actions = {
 	power: async ({ request, params, locals }) => {
-		const { server, node } = await getOwnedServer(params.id, locals.user!.id);
+		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		const form = await request.formData();
 		const action = String(form.get('action'));
 
@@ -49,7 +50,7 @@ export const actions: Actions = {
 	},
 
 	saveSettings: async ({ request, params, locals }) => {
-		const { server, node } = await getOwnedServer(params.id, locals.user!.id);
+		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		const form = await request.formData();
 
 		const settings: ServerSettings = {
@@ -73,7 +74,7 @@ export const actions: Actions = {
 	},
 
 	saveAllowlist: async ({ request, params, locals }) => {
-		const { server, node } = await getOwnedServer(params.id, locals.user!.id);
+		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		const form = await request.formData();
 
 		const allowlistRaw = String(form.get('allowlist') ?? '');
@@ -100,7 +101,7 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ params, locals }) => {
-		const { server, node } = await getOwnedServer(params.id, locals.user!.id);
+		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		try {
 			await agent.deleteServer(node, server);
 		} catch {

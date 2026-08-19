@@ -22,6 +22,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 tar = "0.4"
+zip = { version = "2", default-features = false, features = ["deflate"] }
 bytes = "1"
 futures-util = "0.3"
 tracing = "0.1"
