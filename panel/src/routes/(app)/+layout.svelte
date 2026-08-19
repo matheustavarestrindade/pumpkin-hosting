@@ -15,7 +15,7 @@
 
 <Navbar>
 	{#snippet right()}
-		<span class="text-sm text-mc-muted">{data.user.email}</span>
+		<span class="hidden text-sm text-mc-muted sm:inline">{data.user.email}</span>
 		<Button variant="ghost" size="sm" onclick={logout}>Log out</Button>
 	{/snippet}
 </Navbar>

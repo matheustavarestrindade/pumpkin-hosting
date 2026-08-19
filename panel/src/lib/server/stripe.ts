@@ -16,11 +16,15 @@ export async function getOrCreateCustomer(user: {
 	stripeCustomerId: string | null;
 }): Promise<string> {
 	if (!stripe) throw new Error('Stripe not configured');
-	if (user.stripeCustomerId) return user.stripeCustomerId;
+	if (user.stripeCustomerId) {
+		// Verify the stored customer still exists (bad data self-heals).
+		const existing = await stripe.customers.retrieve(user.stripeCustomerId).catch(() => null);
+		if (existing && !existing.deleted) return existing.id;
+	}
 
-	const existing = await stripe.customers.list({ email: user.email, limit: 1 });
+	const byEmail = await stripe.customers.list({ email: user.email, limit: 1 });
 	const customer =
-		existing.data[0] ??
+		byEmail.data[0] ??
 		(await stripe.customers.create({
 			email: user.email,
 			name: user.name,

@@ -56,6 +56,7 @@ Status: [ ] todo, [~] in progress, [x] done
 
 ## Phase 7 - Hardening
 
+- [ ] Sweep stale `provisioning` rows (payment never completed, older than 24h)
 - [ ] Auto-sleep (F10)
 - [ ] Admin page (F12)
 - [ ] Load test with bot clients on real hardware; set final plan limits

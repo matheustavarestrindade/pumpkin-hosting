@@ -17,6 +17,7 @@
 	let { server, address }: Props = $props();
 
 	let actionLoading = $state(false);
+	let copied = $state(false);
 
 	const statusColor = {
 		running: 'green',
@@ -43,7 +44,19 @@
 		<Badge color={statusColor[server.status]}>{server.status}</Badge>
 	</div>
 
-	<p class="mt-2 font-mono text-sm text-mc-muted">{address}</p>
+	<p class="mt-2 font-mono text-sm text-mc-muted">
+		<button
+			onclick={async () => {
+				await navigator.clipboard.writeText(address);
+				copied = true;
+				setTimeout(() => (copied = false), 1500);
+			}}
+			class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-mc-border/50 hover:text-mc-accent"
+			title="Click to copy"
+		>
+			{copied ? 'Copied!' : address}
+		</button>
+	</p>
 
 	<div class="mt-4 flex items-center gap-2">
 		<form

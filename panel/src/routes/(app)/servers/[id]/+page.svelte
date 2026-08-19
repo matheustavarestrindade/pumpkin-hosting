@@ -61,7 +61,7 @@
 	</div>
 </div>
 
-<nav class="mt-6 flex gap-1 border-b border-mc-border">
+<nav class="mt-6 flex gap-1 overflow-x-auto border-b border-mc-border whitespace-nowrap">
 	{#each tabs as t (t)}
 		<button
 			onclick={() => (tab = t)}

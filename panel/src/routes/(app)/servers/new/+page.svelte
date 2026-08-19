@@ -18,11 +18,11 @@
 		{ id: 'flat', name: 'Flat', description: 'A flat world for big projects.', image: '/images/types/flat.png' }
 	] as const;
 
-	let step = $state(1);
 	let name = $state('');
 	let selectedType = $state<string>('survival');
 	let checking = $state(false);
 	let availability = $state<{ available: boolean; reason?: string } | null>(null);
+	let submitting = $state(false);
 
 	const subdomain = $derived(
 		name
@@ -31,6 +31,13 @@
 			.replace(/[^a-z0-9-]/g, '')
 			.replace(/-+/g, '-')
 			.replace(/^-|-$/g, '')
+	);
+
+	const price = $derived(
+		new Intl.NumberFormat('pt-BR', {
+			style: 'currency',
+			currency: data.plan?.currency ?? 'brl'
+		}).format((data.plan?.priceCents ?? 1000) / 100)
 	);
 
 	let checkTimer: ReturnType<typeof setTimeout>;
@@ -54,92 +61,89 @@
 </svelte:head>
 
 <h1 class="text-xl font-bold text-mc-text">Create a server</h1>
+<p class="mt-1 text-sm text-mc-muted">Name it, pick a type, done.</p>
 
-<div class="mt-2 flex items-center gap-2 text-sm text-mc-muted">
-	{#each ['Name', 'Type', 'Confirm'] as label, i (label)}
-		<span class={step >= i + 1 ? 'text-mc-text font-medium' : ''}>{i + 1}. {label}</span>
-		{#if i < 2}<span class="text-mc-border">/</span>{/if}
-	{/each}
-</div>
-
-<form method="POST" action="?/create" use:enhance class="mt-6">
+<form
+	method="POST"
+	action="?/create"
+	use:enhance={() => {
+		submitting = true;
+		return async ({ update }) => {
+			submitting = false;
+			await update();
+		};
+	}}
+	class="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]"
+>
 	<input type="hidden" name="subdomain" value={subdomain} />
 	<input type="hidden" name="type" value={selectedType} />
 
-	{#if step === 1}
-		<Card class="max-w-md">
-			<Input label="Server name" bind:value={name} name="name" placeholder="Steve's world" maxlength={32} required />
+	<div class="flex flex-col gap-6">
+		<section>
+			<label for="name" class="text-sm font-medium text-mc-text">Server name</label>
+			<div class="mt-1.5">
+				<Input id="name" name="name" bind:value={name} placeholder="Steve's world" maxlength={32} required />
+			</div>
 			{#if subdomain}
-				<p class="mt-3 font-mono text-sm">
-					<span class="text-mc-muted">Address:</span>
-					<span class="text-mc-accent">{subdomain}.{baseDomain}</span>
-				</p>
-				{#if checking}
-					<p class="mt-1 text-xs text-mc-muted">Checking...</p>
-				{:else if availability}
-					{#if availability.available}
-						<p class="mt-1 text-xs text-green-400">Available</p>
-					{:else}
-						<p class="mt-1 text-xs text-red-400">{availability.reason}</p>
+				<div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-sm">
+					<span class="rounded border border-mc-border bg-mc-surface px-2 py-1 text-mc-accent">
+						{subdomain}.{baseDomain}
+					</span>
+					{#if checking}
+						<span class="text-xs text-mc-muted">Checking...</span>
+					{:else if availability?.available}
+						<span class="text-xs text-green-400">Available</span>
+					{:else if availability}
+						<span class="text-xs text-red-400">{availability.reason}</span>
 					{/if}
-				{/if}
+				</div>
 			{/if}
-			<div class="mt-5 flex justify-end">
-				<Button type="button" disabled={!availability?.available} onclick={() => (step = 2)}>Next</Button>
-			</div>
-		</Card>
-	{/if}
+		</section>
 
-	{#if step === 2}
-		<div class="grid max-w-3xl gap-4 sm:grid-cols-2">
-			{#each types as t (t.id)}
-				<TypeSelectCard
-					name={t.name}
-					description={t.description}
-					image={t.image}
-					selected={selectedType === t.id}
-					onselect={() => (selectedType = t.id)}
-				/>
-			{/each}
-		</div>
-		<div class="mt-5 flex gap-2">
-			<Button type="button" variant="secondary" onclick={() => (step = 1)}>Back</Button>
-			<Button type="button" onclick={() => (step = 3)}>Next</Button>
-		</div>
-	{/if}
-
-	{#if step === 3}
-		<Card class="max-w-md">
-			<dl class="space-y-2 text-sm">
-				<div class="flex justify-between">
-					<dt class="text-mc-muted">Name</dt>
-					<dd class="text-mc-text">{name}</dd>
-				</div>
-				<div class="flex justify-between">
-					<dt class="text-mc-muted">Address</dt>
-					<dd class="font-mono text-mc-accent">{subdomain}.{baseDomain}</dd>
-				</div>
-				<div class="flex justify-between">
-					<dt class="text-mc-muted">Type</dt>
-					<dd class="text-mc-text capitalize">{selectedType}</dd>
-				</div>
-				<div class="flex justify-between border-t border-mc-border pt-2">
-					<dt class="text-mc-muted">Price</dt>
-					<dd class="text-mc-text">
-						{new Intl.NumberFormat('pt-BR', {
-							style: 'currency',
-							currency: data.plan?.currency ?? 'brl'
-						}).format((data.plan?.priceCents ?? 1000) / 100)}/month
-					</dd>
-				</div>
-			</dl>
-			{#if form?.error}
-				<p class="mt-3 text-sm text-red-400">{form.error}</p>
-			{/if}
-			<div class="mt-5 flex gap-2">
-				<Button type="button" variant="secondary" onclick={() => (step = 2)}>Back</Button>
-				<Button type="submit">Create server</Button>
+		<section>
+			<p class="text-sm font-medium text-mc-text">Server type</p>
+			<div class="mt-2 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+				{#each types as t (t.id)}
+					<TypeSelectCard
+						name={t.name}
+						description={t.description}
+						image={t.image}
+						selected={selectedType === t.id}
+						onselect={() => (selectedType = t.id)}
+					/>
+				{/each}
 			</div>
-		</Card>
-	{/if}
+		</section>
+	</div>
+
+	<Card class="h-fit lg:sticky lg:top-6">
+		<h2 class="font-semibold text-mc-text">Summary</h2>
+		<dl class="mt-3 space-y-2 text-sm">
+			<div class="flex justify-between gap-2">
+				<dt class="text-mc-muted">Name</dt>
+				<dd class="truncate text-mc-text">{name || '-'}</dd>
+			</div>
+			<div class="flex justify-between gap-2">
+				<dt class="text-mc-muted">Address</dt>
+				<dd class="truncate font-mono text-mc-accent">{subdomain ? `${subdomain}.${baseDomain}` : '-'}</dd>
+			</div>
+			<div class="flex justify-between gap-2">
+				<dt class="text-mc-muted">Type</dt>
+				<dd class="capitalize text-mc-text">{selectedType}</dd>
+			</div>
+			<div class="flex justify-between gap-2 border-t border-mc-border pt-2">
+				<dt class="text-mc-muted">Price</dt>
+				<dd class="text-mc-text">{price}/month</dd>
+			</div>
+		</dl>
+
+		{#if form?.error}
+			<p class="mt-3 text-sm text-red-400">{form.error}</p>
+		{/if}
+
+		<Button type="submit" class="mt-5 w-full" disabled={!availability?.available} loading={submitting}>
+			Create server
+		</Button>
+		<p class="mt-3 text-center text-xs text-mc-muted">Up to 10 players. Cancel anytime.</p>
+	</Card>
 </form>

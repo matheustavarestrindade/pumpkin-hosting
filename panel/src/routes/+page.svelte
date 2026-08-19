@@ -52,7 +52,7 @@
 		</div>
 		<p class="mt-6 font-mono text-sm text-mc-muted">
 			your server address:
-			<span class="rounded border border-mc-border bg-mc-surface px-2 py-1 text-mc-accent">yourexample.com</span>
+			<span class="rounded border border-mc-border bg-mc-surface px-2 py-1 text-mc-accent">steve.example.com</span>
 		</p>
 	</section>
 
