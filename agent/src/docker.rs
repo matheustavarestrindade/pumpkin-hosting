@@ -249,6 +249,15 @@ pub async fn remove(docker: &bollard::Docker, server_id: uuid::Uuid) -> Result<(
         .await
 }
 
+pub async fn remove_volume(docker: &bollard::Docker, name: &str) -> Result<(), bollard::errors::Error> {
+    docker
+        .remove_volume(
+            name,
+            Some(bollard::query_parameters::RemoveVolumeOptionsBuilder::default().force(true).build()),
+        )
+        .await
+}
+
 /// Downloads /pumpkin from the container as a tar and re-packs it as a zip.
 /// Works on stopped containers. v1: buffers in memory (worlds are small on our plans).
 pub async fn download_world_zip(

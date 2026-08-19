@@ -30,15 +30,31 @@ docker-compose.yml
 Requirements: Docker, Node 20+.
 
 ```bash
-docker compose up -d postgres     # db only
-cd panel
-cp .env.example .env              # fill values
-npm install
-npm run db:push                   # create tables
-npm run dev                       # http://localhost:5173
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
 ```
 
-The agent needs Rust (`rustup`) for local dev, or it builds in Docker.
+Open http://localhost:3000. Without Stripe keys the panel runs in dev mode:
+servers activate immediately without payment.
+
+## Test Stripe locally
+
+```bash
+brew install stripe/stripe-cli/stripe
+stripe login
+stripe products create --name "Friends" --description "Minecraft server for friends"
+stripe prices create --product <prod_id> --currency eur --unit-amount 300 --recurring-interval month
+```
+
+Put `STRIPE_SECRET_KEY` (test key) and `STRIPE_PRICE_ID` (the `price_...` from above)
+in `.env`, restart the panel, then forward webhooks:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+# copy the printed whsec_... into STRIPE_WEBHOOK_SECRET, restart panel again
+```
+
+Now creating a server redirects to a real Stripe test checkout. Use card
+4242 4242 4242 4242, any future date, any CVC. The webhook activates the server.
 
 ## Deploy
 

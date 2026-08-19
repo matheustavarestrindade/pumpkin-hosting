@@ -36,6 +36,17 @@ async fn run_inner(state: &Arc<AppState>) -> Result<(), String> {
         }
     }
 
+    // Grace period ended: remove container, volume and DB row.
+    let expired = db::expired_deletions(&state.db, state.cfg.node_id)
+        .await
+        .map_err(|e| format!("db query failed: {e}"))?;
+    for row in &expired {
+        tracing::info!(%row.id, %row.subdomain, "grace period ended, deleting server");
+        let _ = docker::remove(&state.docker, row.id).await;
+        let _ = docker::remove_volume(&state.docker, &row.volume_name).await;
+        db::delete_server_row(&state.db, row.id).await;
+    }
+
     for row in &rows {
         match row.status.as_str() {
             "running" | "starting" => {

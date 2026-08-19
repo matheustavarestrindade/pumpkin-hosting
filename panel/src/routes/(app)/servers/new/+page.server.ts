@@ -1,7 +1,8 @@
 import { agent } from '$lib/server/agent';
 import { db } from '$lib/server/db';
-import { nodes, plans, servers } from '$lib/server/db/schema';
+import { nodes, plans, servers, user as userTable } from '$lib/server/db/schema';
 import { requireUser } from '$lib/server/guard';
+import { billingEnabled, createCheckout, getOrCreateCustomer } from '$lib/server/stripe';
 import { defaultSettings } from '$lib/server-settings';
 import { validateSubdomain } from '$lib/subdomains';
 import { fail, redirect } from '@sveltejs/kit';
@@ -15,7 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	create: async ({ request, locals }) => {
+	create: async ({ request, locals, url }) => {
 		const user = requireUser(locals);
 		const form = await request.formData();
 		const subdomain = String(form.get('subdomain') ?? '').toLowerCase();
@@ -62,8 +63,6 @@ export const actions: Actions = {
 		const id = crypto.randomUUID();
 		const volumeName = `world-${id}`;
 
-		// TODO(phase-5): create Stripe Checkout session here and only insert
-		// the server row after the webhook confirms payment.
 		await db.insert(servers).values({
 			id,
 			userId: user.id,
@@ -77,6 +76,32 @@ export const actions: Actions = {
 			settings
 		});
 
+		if (billingEnabled) {
+			// Paid flow: Stripe checkout activates the server via webhook.
+			const [userRow] = await db
+				.select({ stripeCustomerId: userTable.stripeCustomerId })
+				.from(userTable)
+				.where(eq(userTable.id, user.id))
+				.limit(1);
+			const customerId = await getOrCreateCustomer({
+				id: user.id,
+				email: user.email,
+				name: user.name,
+				stripeCustomerId: userRow?.stripeCustomerId ?? null
+			});
+			if (userRow?.stripeCustomerId !== customerId) {
+				await db.update(userTable).set({ stripeCustomerId: customerId }).where(eq(userTable.id, user.id));
+			}
+			const checkoutUrl = await createCheckout({
+				serverId: id,
+				customerId,
+				successUrl: `${url.origin}/servers/${id}?created=1`,
+				cancelUrl: `${url.origin}/servers/new`
+			});
+			redirect(303, checkoutUrl);
+		}
+
+		// Dev mode (no Stripe keys): activate immediately.
 		try {
 			const { containerId } = await agent.createServer(node, {
 				serverId: id,
@@ -93,7 +118,6 @@ export const actions: Actions = {
 				.where(eq(servers.id, id));
 		} catch (e) {
 			console.error('agent createServer failed', e);
-			// Agent unreachable: status error, user can retry from the server page.
 			await db.update(servers).set({ status: 'error', updatedAt: new Date() }).where(eq(servers.id, id));
 		}
 

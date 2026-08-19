@@ -47,3 +47,21 @@ pub async fn heartbeat(pool: &PgPool, node_id: uuid::Uuid) {
         .execute(pool)
         .await;
 }
+
+/// Servers whose grace period ended: ready for volume + row deletion.
+pub async fn expired_deletions(pool: &PgPool, node_id: uuid::Uuid) -> Result<Vec<ServerRow>, sqlx::Error> {
+    sqlx::query_as::<_, ServerRow>(
+        "select id, subdomain, image, volume_name, status::text as status, settings, container_id
+         from servers where node_id = $1 and deletion_scheduled_at is not null and deletion_scheduled_at < now()",
+    )
+    .bind(node_id)
+    .fetch_all(pool)
+    .await
+}
+
+pub async fn delete_server_row(pool: &PgPool, id: uuid::Uuid) {
+    let _ = sqlx::query("delete from servers where id = $1")
+        .bind(id)
+        .execute(pool)
+        .await;
+}

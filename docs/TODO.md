@@ -40,9 +40,12 @@ Status: [ ] todo, [~] in progress, [x] done
 
 ## Phase 5 - Stripe
 
-- [ ] Checkout session on create
-- [ ] Webhook: activate, suspend, reactivate (F7, F8)
-- [ ] Customer portal link
+- [x] Checkout session on create (dev mode bypass without keys)
+- [x] Webhook: activate on checkout.session.completed (idempotent via stripe_events)
+- [x] Suspend on customer.subscription.deleted + 7-day grace sweep in agent
+- [x] Reactivate via new checkout (Billing tab)
+- [x] Customer portal (Billing tab)
+- [ ] Tested with real Stripe CLI webhooks (needs `stripe login`, see README)
 
 ## Phase 6 - World download
 

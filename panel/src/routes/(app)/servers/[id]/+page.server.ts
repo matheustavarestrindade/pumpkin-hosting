@@ -1,7 +1,8 @@
-import { requireUser } from '$lib/server/guard';
 import { agent } from '$lib/server/agent';
 import { db } from '$lib/server/db';
-import { nodes, servers, type ServerSettings } from '$lib/server/db/schema';
+import { nodes, servers, user as userTable, type ServerSettings } from '$lib/server/db/schema';
+import { requireUser } from '$lib/server/guard';
+import { billingEnabled, createCheckout, createPortalSession, getOrCreateCustomer } from '$lib/server/stripe';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
@@ -18,8 +19,20 @@ async function getOwnedServer(id: string, userId: string) {
 }
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const { server } = await getOwnedServer(params.id, requireUser(locals).id);
-	return { server };
+	const user = requireUser(locals);
+	const { server } = await getOwnedServer(params.id, user.id);
+	const [userRow] = await db
+		.select({ stripeCustomerId: userTable.stripeCustomerId })
+		.from(userTable)
+		.where(eq(userTable.id, user.id))
+		.limit(1);
+	return {
+		server,
+		billing: {
+			enabled: billingEnabled,
+			hasCustomer: Boolean(userRow?.stripeCustomerId)
+		}
+	};
 };
 
 export const actions: Actions = {
@@ -100,8 +113,49 @@ export const actions: Actions = {
 		return { saved: true };
 	},
 
-	delete: async ({ params, locals }) => {
-		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
+		portal: async ({ params, locals, url }) => {
+		const user = requireUser(locals);
+		await getOwnedServer(params.id, user.id);
+		const [userRow] = await db
+			.select({ stripeCustomerId: userTable.stripeCustomerId })
+			.from(userTable)
+			.where(eq(userTable.id, user.id))
+			.limit(1);
+		if (!userRow?.stripeCustomerId) return fail(400, { billingError: 'No billing account yet' });
+		const portalUrl = await createPortalSession(
+			userRow.stripeCustomerId,
+			`${url.origin}/servers/${params.id}`
+		);
+		redirect(303, portalUrl);
+	},
+
+	payNow: async ({ params, locals, url }) => {
+		const user = requireUser(locals);
+		const { server } = await getOwnedServer(params.id, user.id);
+		const [userRow] = await db
+			.select()
+			.from(userTable)
+			.where(eq(userTable.id, user.id))
+			.limit(1);
+		const customerId = await getOrCreateCustomer({
+			id: user.id,
+			email: user.email,
+			name: user.name,
+			stripeCustomerId: userRow?.stripeCustomerId ?? null
+		});
+		if (userRow?.stripeCustomerId !== customerId) {
+			await db.update(userTable).set({ stripeCustomerId: customerId }).where(eq(userTable.id, user.id));
+		}
+		const checkoutUrl = await createCheckout({
+			serverId: server.id,
+			customerId,
+			successUrl: `${url.origin}/servers/${server.id}?paid=1`,
+			cancelUrl: `${url.origin}/servers/${server.id}`
+		});
+		redirect(303, checkoutUrl);
+	},
+
+	delete: async ({ params, locals }) => {		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		try {
 			await agent.deleteServer(node, server);
 		} catch {

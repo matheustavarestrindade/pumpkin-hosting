@@ -189,13 +189,40 @@
 					<dd class="text-mc-text">Friends</dd>
 				</div>
 				<div class="flex justify-between">
-					<dt class="text-mc-muted">Status</dt>
-					<dd class="text-mc-text">{data.server.stripeSubscriptionId ? 'Active' : 'Not connected'}</dd>
+					<dt class="text-mc-muted">Billing</dt>
+					<dd class="text-mc-text">
+						{#if !data.billing.enabled}
+							Dev mode (no payment)
+						{:else if data.server.stripeSubscriptionId}
+							Active subscription
+						{:else if data.server.status === 'suspended'}
+							Suspended - payment needed
+						{:else}
+							Payment not completed
+						{/if}
+					</dd>
 				</div>
 			</dl>
-			<p class="mt-4 text-sm text-mc-muted">
-				Payment management (card, cancel) opens here once billing is enabled.
-			</p>
+			<div class="mt-4 flex gap-2">
+				{#if data.billing.enabled && data.server.stripeSubscriptionId && data.billing.hasCustomer}
+					<form method="POST" action="?/portal">
+						<Button type="submit" variant="secondary">Manage billing</Button>
+					</form>
+				{/if}
+				{#if data.billing.enabled && !data.server.stripeSubscriptionId}
+					<form method="POST" action="?/payNow">
+						<Button type="submit">
+							{data.server.status === 'suspended' ? 'Reactivate subscription' : 'Complete payment'}
+						</Button>
+					</form>
+				{/if}
+			</div>
+			{#if data.server.status === 'suspended'}
+				<p class="mt-3 text-sm text-mc-muted">
+					Your server is paused. Reactivate to keep playing. The world is deleted 7 days after
+					cancellation.
+				</p>
+			{/if}
 		</Card>
 	{/if}
 
