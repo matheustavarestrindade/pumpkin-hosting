@@ -125,7 +125,12 @@
 				</div>
 				<div class="flex justify-between border-t border-mc-border pt-2">
 					<dt class="text-mc-muted">Price</dt>
-					<dd class="text-mc-text">€{((data.plan?.priceCents ?? 300) / 100).toFixed(0)}/month</dd>
+					<dd class="text-mc-text">
+						{new Intl.NumberFormat('pt-BR', {
+							style: 'currency',
+							currency: data.plan?.currency ?? 'brl'
+						}).format((data.plan?.priceCents ?? 1000) / 100)}/month
+					</dd>
 				</div>
 			</dl>
 			{#if form?.error}

@@ -12,12 +12,13 @@ const res = await pool.query(`select id from plans where name = 'Friends' limit 
 if (res.rowCount === 0) {
 	await pool.query(
 		`insert into plans (name, price_cents, currency, max_players, mem_mb, cpu_millicores, stripe_price_id)
-		 values ('Friends', 300, 'eur', 10, 256, 500, $1)`,
+		 values ('Friends', 1000, 'brl', 10, 256, 500, $1)`,
 		[stripePriceId]
 	);
 	console.log('plan "Friends" created');
 } else {
-	console.log('plan "Friends" already exists');
+	await pool.query(`update plans set stripe_price_id = $1, price_cents = 1000, currency = 'brl' where name = 'Friends'`, [stripePriceId]);
+	console.log('plan "Friends" updated');
 }
 
 const nodeId = process.env.NODE_ID ?? '00000000-0000-0000-0000-000000000001';

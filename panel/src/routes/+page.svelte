@@ -74,7 +74,7 @@
 			<Card class="mx-auto mt-8 max-w-sm">
 				<div class="flex items-baseline justify-between">
 					<h3 class="text-lg font-semibold text-mc-text">Friends</h3>
-					<p class="text-mc-text"><span class="text-2xl font-bold">€3</span> <span class="text-sm text-mc-muted">/month</span></p>
+					<p class="text-mc-text"><span class="text-2xl font-bold">R$10</span> <span class="text-sm text-mc-muted">/month</span></p>
 				</div>
 				<ul class="mt-4 space-y-2 text-sm text-mc-muted">
 					<li>Up to 10 players</li>
