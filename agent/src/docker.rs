@@ -188,9 +188,19 @@ pub async fn upload_configs(
 ) -> Result<(), bollard::errors::Error> {
     let mut tar_builder = tar::Builder::new(Vec::new());
 
+    // data/ must exist for whitelist.json; add the dir entry explicitly.
+    let mut dir_header = tar::Header::new_gnu();
+    dir_header.set_entry_type(tar::EntryType::Directory);
+    dir_header.set_mode(0o755);
+    dir_header.set_size(0);
+    dir_header.set_cksum();
+    tar_builder
+        .append_data(&mut dir_header, "data", std::io::empty())
+        .expect("tar append dir");
+
     for (path, content) in [
         ("pumpkin.toml", pumpkin_toml),
-        ("whitelist.json", whitelist_json),
+        ("data/whitelist.json", whitelist_json),
     ] {
         let mut header = tar::Header::new_gnu();
         header.set_size(content.len() as u64);
