@@ -1,17 +1,14 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import Switch from '$lib/components/ui/switch/switch.svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
-	import XIcon from '@lucide/svelte/icons/x';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import XIcon from '@lucide/svelte/icons/x';
 
 	type Props = {
-		enabled: boolean;
 		friends: string[];
 	};
 
-	let { enabled = $bindable(), friends = $bindable() }: Props = $props();
+	let { friends = $bindable() }: Props = $props();
 
 	let input = $state('');
 	let error = $state('');
@@ -51,60 +48,57 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
-	<div class="flex items-center gap-3">
-		<Switch id="friends-enabled" bind:checked={enabled} />
-		<Label for="friends-enabled" class="cursor-pointer">
-			Friends only {enabled ? '(on)' : '(off)'}
-		</Label>
+<div class="flex flex-col gap-3">
+	<div class="flex gap-2">
+		<Input
+			placeholder="Minecraft username"
+			bind:value={input}
+			maxlength={16}
+			class="h-11 rounded-xl bg-input"
+			onkeydown={(e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					addFriend();
+				}
+			}}
+		/>
+		<Button
+			type="button"
+			size="icon-lg"
+			onclick={addFriend}
+			disabled={checking || !input.trim()}
+			aria-label="Add player"
+		>
+			<PlusIcon />
+		</Button>
 	</div>
-	<input type="checkbox" name="allowlistEnabled" bind:checked={enabled} class="hidden" tabindex="-1" aria-hidden="true" />
+	{#if error}
+		<p class="text-sm text-destructive">{error}</p>
+	{/if}
 
 	{#each friends as friend (friend)}
 		<input type="hidden" name="friend" value={friend} />
 	{/each}
 
-	{#if enabled}
-		<div class="flex gap-2">
-			<Input
-				placeholder="Minecraft username"
-				bind:value={input}
-				maxlength={16}
-				onkeydown={(e) => {
-					if (e.key === 'Enter') {
-						e.preventDefault();
-						addFriend();
-					}
-				}}
-			/>
-			<Button type="button" variant="secondary" onclick={addFriend} disabled={checking || !input.trim()}>
-				<PlusIcon /> Add
-			</Button>
-		</div>
-		{#if error}
-			<p class="text-sm text-destructive">{error}</p>
-		{/if}
-
-		{#if friends.length === 0}
-			<p class="text-sm text-muted-foreground">No friends added yet. Only you can join.</p>
-		{:else}
-			<ul class="flex flex-col gap-2">
-				{#each friends as friend (friend)}
-					<li class="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
-						<img src={avatarUrl(friend)} alt={friend} class="size-8 rounded-md" width="32" height="32" />
-						<span class="flex-1 font-mono text-sm text-foreground">{friend}</span>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon-sm"
-							onclick={() => removeFriend(friend)}
-							title="Remove {friend}"
-						>
-							<XIcon />
-						</Button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+	{#if friends.length === 0}
+		<p class="text-sm text-muted-foreground">No players added yet.</p>
+	{:else}
+		<ul class="flex flex-col gap-2">
+			{#each friends as friend (friend)}
+				<li class="flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2">
+					<img src={avatarUrl(friend)} alt={friend} class="size-8 rounded-lg" width="32" height="32" />
+					<span class="flex-1 font-mono text-sm text-foreground">{friend}</span>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						onclick={() => removeFriend(friend)}
+						aria-label="Remove {friend}"
+					>
+						<XIcon />
+					</Button>
+				</li>
+			{/each}
+		</ul>
 	{/if}
 </div>

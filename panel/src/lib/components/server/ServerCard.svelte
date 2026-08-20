@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Card from '$lib/components/ui/card';
-	import StatusDot from '$lib/components/server/StatusDot.svelte';
-	import CopyIcon from '@lucide/svelte/icons/copy';
-	import CheckIcon from '@lucide/svelte/icons/check';
+	import { cn } from '$lib/utils';
+	import BlocksIcon from '@lucide/svelte/icons/blocks';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+	import FlameIcon from '@lucide/svelte/icons/flame';
+	import LayersIcon from '@lucide/svelte/icons/layers';
+	import SwordsIcon from '@lucide/svelte/icons/swords';
 	import type { servers } from '$lib/server/db/schema';
 
 	type Server = typeof servers.$inferSelect;
@@ -18,71 +18,55 @@
 
 	let { server, address }: Props = $props();
 
-	let actionLoading = $state(false);
-	let copied = $state(false);
-
-	async function copyAddress() {
-		await navigator.clipboard.writeText(address);
-		copied = true;
-		setTimeout(() => (copied = false), 1500);
-	}
-
-	const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-		running: 'default',
-		provisioning: 'secondary',
-		starting: 'secondary',
-		stopping: 'secondary',
-		stopped: 'outline',
-		error: 'destructive',
-		suspended: 'destructive'
+	const typeIcon = {
+		survival: SwordsIcon,
+		creative: BlocksIcon,
+		hardcore: FlameIcon,
+		flat: LayersIcon
 	};
+
+	const statusLabel: Record<string, string> = {
+		running: 'Online',
+		stopped: 'Offline',
+		provisioning: 'Starting',
+		starting: 'Starting',
+		stopping: 'Stopping',
+		error: 'Error',
+		suspended: 'Suspended'
+	};
+
+	const statusClass: Record<string, string> = {
+		running: 'bg-primary/15 text-primary border-transparent',
+		stopped: 'bg-muted text-muted-foreground border-transparent',
+		provisioning: 'bg-amber-500/15 text-amber-700 border-transparent',
+		starting: 'bg-amber-500/15 text-amber-700 border-transparent',
+		stopping: 'bg-amber-500/15 text-amber-700 border-transparent',
+		error: 'bg-destructive/15 text-destructive border-transparent',
+		suspended: 'bg-destructive/15 text-destructive border-transparent'
+	};
+
+	const Icon = $derived(typeIcon[server.type] ?? SwordsIcon);
 </script>
 
-<Card.Root class="transition-colors hover:border-foreground/20">
-	<Card.Header class="pb-3">
-		<div class="flex items-start justify-between gap-2">
-			<div class="flex items-center gap-2 min-w-0">
-				<StatusDot status={server.status} />
-				<button
-					onclick={() => goto(`/servers/${server.id}`)}
-					class="truncate font-semibold text-foreground hover:underline"
-				>
-					{server.name}
-				</button>
-			</div>
-			<Badge variant={statusVariant[server.status] ?? 'outline'}>{server.status}</Badge>
-		</div>
-	</Card.Header>
-	<Card.Content class="pb-3">
-		<div class="flex items-center gap-1">
-			<code class="min-w-0 truncate rounded-md border border-border bg-background px-2 py-1 font-mono text-sm text-primary">
-				{address}
-			</code>
-			<Button variant="ghost" size="icon-sm" onclick={copyAddress} title="Copy address">
-				{#if copied}<CheckIcon class="text-primary" />{:else}<CopyIcon />{/if}
-			</Button>
-		</div>
-	</Card.Content>
-	<Card.Footer class="gap-2">
-		<form
-			method="POST"
-			action="/servers/{server.id}?/power"
-			use:enhance={() => {
-				actionLoading = true;
-				return async ({ update }) => {
-					actionLoading = false;
-					await update();
-				};
-			}}
-		>
-			{#if server.status === 'stopped' || server.status === 'error'}
-				<Button size="sm" type="submit" name="action" value="start" disabled={actionLoading}>Start</Button>
-			{:else if server.status === 'running'}
-				<Button size="sm" variant="secondary" type="submit" name="action" value="stop" disabled={actionLoading}>
-					Stop
-				</Button>
-			{/if}
-		</form>
-		<Button size="sm" variant="ghost" href="/servers/{server.id}">Manage</Button>
-	</Card.Footer>
-</Card.Root>
+<button
+	onclick={() => goto(`/servers/${server.id}`)}
+	class="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/40"
+>
+	<span class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+		<Icon class="size-6" />
+	</span>
+
+	<span class="min-w-0 flex-1">
+		<span class="block truncate font-semibold text-foreground">{server.name}</span>
+		<span class="mt-0.5 block truncate text-sm text-muted-foreground">
+			<span class="capitalize">{server.type}</span> · {address}
+		</span>
+		<span class="mt-1.5 inline-flex">
+			<Badge class={cn('px-2 py-0.5 text-xs', statusClass[server.status])}>
+				{statusLabel[server.status] ?? server.status}
+			</Badge>
+		</span>
+	</span>
+
+	<ChevronRightIcon class="size-5 shrink-0 text-muted-foreground" />
+</button>

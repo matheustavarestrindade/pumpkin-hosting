@@ -69,6 +69,7 @@ export const actions: Actions = {
 		const settings: ServerSettings = {
 			...server.settings,
 			difficulty: String(form.get('difficulty')) as ServerSettings['difficulty'],
+			gamemode: String(form.get('gamemode')) as ServerSettings['gamemode'],
 			pvp: form.get('pvp') === 'on',
 			motd: String(form.get('motd') ?? '').slice(0, 64)
 		};

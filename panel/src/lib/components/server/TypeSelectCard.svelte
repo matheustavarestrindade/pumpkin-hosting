@@ -16,15 +16,13 @@
 	type="button"
 	onclick={onselect}
 	class={cn(
-		'overflow-hidden rounded-xl border text-left transition-colors',
-		selected
-			? 'border-primary ring-1 ring-primary'
-			: 'border-border hover:border-foreground/30'
+		'group overflow-hidden rounded-2xl border bg-card text-left shadow-sm transition-all',
+		selected ? 'border-primary ring-2 ring-primary/40' : 'border-border hover:border-primary/40'
 	)}
 >
-	<img src={image} alt={name} class="aspect-[2/1] w-full object-cover" />
-	<div class="bg-card p-3">
+	<img src={image} alt={name} class="aspect-[4/3] w-full object-cover" />
+	<div class="p-3">
 		<p class="font-semibold text-foreground">{name}</p>
-		<p class="mt-0.5 text-sm text-muted-foreground">{description}</p>
+		<p class="mt-0.5 text-xs text-muted-foreground">{description}</p>
 	</div>
 </button>

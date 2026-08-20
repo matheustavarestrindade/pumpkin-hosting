@@ -5,10 +5,10 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
-	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
+	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import PlusIcon from '@lucide/svelte/icons/plus';
-	import ServerIcon from '@lucide/svelte/icons/server';
+	import UserIcon from '@lucide/svelte/icons/user';
 
 	type Props = {
 		user: { email: string; name: string };
@@ -17,8 +17,9 @@
 	let { user }: Props = $props();
 
 	const items = [
-		{ title: 'Servers', href: '/dashboard', icon: LayoutDashboardIcon },
-		{ title: 'New server', href: '/servers/new', icon: PlusIcon }
+		{ title: 'Servers', href: '/dashboard', icon: LayoutGridIcon },
+		{ title: 'New server', href: '/servers/new', icon: PlusIcon },
+		{ title: 'Profile', href: '/settings', icon: UserIcon }
 	];
 
 	async function logout() {
@@ -49,12 +50,12 @@
 
 	<Sidebar.Content>
 		<Sidebar.Group>
-			<Sidebar.GroupLabel>Servers</Sidebar.GroupLabel>
+			<Sidebar.GroupLabel>Menu</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					{#each items as item (item.href)}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={page.url.pathname === item.href}>
+							<Sidebar.MenuButton isActive={page.url.pathname === item.href || (item.href !== '/dashboard' && page.url.pathname.startsWith(item.href))}>
 								{#snippet child({ props })}
 									<a href={item.href} {...props}>
 										<item.icon />

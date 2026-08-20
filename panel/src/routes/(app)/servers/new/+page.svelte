@@ -6,6 +6,7 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import TypeSelectCard from '$lib/components/server/TypeSelectCard.svelte';
+	import RocketIcon from '@lucide/svelte/icons/rocket';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -13,10 +14,10 @@
 	const baseDomain = env.PUBLIC_BASE_DOMAIN ?? 'example.com';
 
 	const types = [
-		{ id: 'survival', name: 'Survival', description: 'Gather, build, survive. The classic.', image: '/images/types/survival.png' },
-		{ id: 'creative', name: 'Creative', description: 'Unlimited blocks. Just build.', image: '/images/types/creative.png' },
-		{ id: 'hardcore', name: 'Hardcore', description: 'One life. Hard difficulty.', image: '/images/types/hardcore.png' },
-		{ id: 'flat', name: 'Flat', description: 'A flat world for big projects.', image: '/images/types/flat.png' }
+		{ id: 'survival', name: 'Survival', description: 'Classic experience', image: '/images/types/survival.png' },
+		{ id: 'hardcore', name: 'Hardcore', description: 'One life only', image: '/images/types/hardcore.png' },
+		{ id: 'creative', name: 'Creative', description: 'Infinite resources', image: '/images/types/creative.png' },
+		{ id: 'flat', name: 'Superflat', description: "Builder's canvas", image: '/images/types/flat.png' }
 	] as const;
 
 	let name = $state('');
@@ -61,49 +62,59 @@
 	<title>New server - hosting-mc</title>
 </svelte:head>
 
-<h1 class="text-xl font-bold text-foreground">Create a server</h1>
-<p class="mt-1 text-sm text-muted-foreground">Name it, pick a type, done.</p>
+<div class="mx-auto max-w-2xl">
+	<h1 class="text-2xl font-bold text-foreground">New Adventure</h1>
+	<p class="mt-1 text-sm text-muted-foreground">Configure your new Minecraft server.</p>
 
-<form
-	method="POST"
-	action="?/create"
-	use:enhance={() => {
-		submitting = true;
-		return async ({ update }) => {
-			submitting = false;
-			await update();
-		};
-	}}
-	class="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]"
->
-	<input type="hidden" name="subdomain" value={subdomain} />
-	<input type="hidden" name="type" value={selectedType} />
+	<form
+		method="POST"
+		action="?/create"
+		use:enhance={() => {
+			submitting = true;
+			return async ({ update }) => {
+				submitting = false;
+				await update();
+			};
+		}}
+		class="mt-6 flex flex-col gap-8"
+	>
+		<input type="hidden" name="subdomain" value={subdomain} />
+		<input type="hidden" name="type" value={selectedType} />
 
-	<div class="flex flex-col gap-6">
 		<section>
-			<Label for="name">Server name</Label>
+			<Label for="name" class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+				Server Name
+			</Label>
 			<div class="mt-2">
-				<Input id="name" name="name" bind:value={name} placeholder="Steve's world" maxlength={32} required />
+				<Input
+					id="name"
+					name="name"
+					bind:value={name}
+					placeholder="e.g. The Overworld"
+					maxlength={32}
+					required
+					class="h-12 rounded-xl bg-input"
+				/>
 			</div>
 			{#if subdomain}
 				<div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-sm">
-					<span class="rounded-md border border-border bg-card px-2 py-1 text-primary">
+					<span class="rounded-lg border border-border bg-card px-2 py-1 text-primary">
 						{subdomain}.{baseDomain}
 					</span>
 					{#if checking}
 						<span class="text-xs text-muted-foreground">Checking...</span>
 					{:else if availability?.available}
-						<span class="text-xs text-primary">Available</span>
+						<span class="text-xs font-medium text-primary">Available</span>
 					{:else if availability}
-						<span class="text-xs text-destructive">{availability.reason}</span>
+						<span class="text-xs font-medium text-destructive">{availability.reason}</span>
 					{/if}
 				</div>
 			{/if}
 		</section>
 
 		<section>
-			<p class="text-sm font-medium text-foreground">Server type</p>
-			<div class="mt-2 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+			<p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Select Gamemode</p>
+			<div class="mt-3 grid grid-cols-2 gap-3">
 				{#each types as t (t.id)}
 					<TypeSelectCard
 						name={t.name}
@@ -115,40 +126,20 @@
 				{/each}
 			</div>
 		</section>
-	</div>
 
-	<Card.Root class="h-fit lg:sticky lg:top-20">
-		<Card.Header>
-			<Card.Title class="text-base">Summary</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			<dl class="space-y-2 text-sm">
-				<div class="flex justify-between gap-2">
-					<dt class="text-muted-foreground">Name</dt>
-					<dd class="truncate text-foreground">{name || '-'}</dd>
-				</div>
-				<div class="flex justify-between gap-2">
-					<dt class="text-muted-foreground">Address</dt>
-					<dd class="truncate font-mono text-primary">{subdomain ? `${subdomain}.${baseDomain}` : '-'}</dd>
-				</div>
-				<div class="flex justify-between gap-2">
-					<dt class="text-muted-foreground">Type</dt>
-					<dd class="capitalize text-foreground">{selectedType}</dd>
-				</div>
-				<div class="flex justify-between gap-2 border-t border-border pt-2">
-					<dt class="text-muted-foreground">Price</dt>
-					<dd class="text-foreground">{price}/month</dd>
-				</div>
-			</dl>
+		{#if form?.error}
+			<p class="text-sm text-destructive">{form.error}</p>
+		{/if}
 
-			{#if form?.error}
-				<p class="mt-3 text-sm text-destructive">{form.error}</p>
-			{/if}
-
-			<Button type="submit" class="mt-5 w-full" disabled={!availability?.available || submitting}>
-				{submitting ? 'Creating...' : 'Create server'}
+		<div class="sticky bottom-20 md:bottom-6">
+			<Button
+				type="submit"
+				size="lg"
+				class="h-13 w-full rounded-xl text-base shadow-lg"
+				disabled={!availability?.available || submitting}
+			>
+				<RocketIcon /> {submitting ? 'Launching...' : `Launch Server · ${price}/month`}
 			</Button>
-			<p class="mt-3 text-center text-xs text-muted-foreground">Up to 10 players. Cancel anytime.</p>
-		</Card.Content>
-	</Card.Root>
-</form>
+		</div>
+	</form>
+</div>
