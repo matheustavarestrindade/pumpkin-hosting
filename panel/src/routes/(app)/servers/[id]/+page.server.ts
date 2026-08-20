@@ -62,7 +62,7 @@ export const actions: Actions = {
 		}
 	},
 
-	saveSettings: async ({ request, params, locals }) => {
+	apply: async ({ request, params, locals }) => {
 		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		const form = await request.formData();
 
@@ -71,28 +71,7 @@ export const actions: Actions = {
 			difficulty: String(form.get('difficulty')) as ServerSettings['difficulty'],
 			gamemode: String(form.get('gamemode')) as ServerSettings['gamemode'],
 			pvp: form.get('pvp') === 'on',
-			motd: String(form.get('motd') ?? '').slice(0, 64)
-		};
-
-		await db
-			.update(servers)
-			.set({ settings, updatedAt: new Date() })
-			.where(eq(servers.id, server.id));
-
-		try {
-			await agent.applySettings(node, server, settings);
-		} catch {
-			return fail(502, { error: 'Saved, but the server could not be reached. Applies on next start.' });
-		}
-		return { saved: true };
-	},
-
-	saveAllowlist: async ({ request, params, locals }) => {
-		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
-		const form = await request.formData();
-
-		const settings: ServerSettings = {
-			...server.settings,
+			motd: String(form.get('motd') ?? '').slice(0, 64),
 			allowlistEnabled: form.get('allowlistEnabled') === 'on',
 			allowlist: form
 				.getAll('friend')

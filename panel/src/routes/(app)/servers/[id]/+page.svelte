@@ -20,6 +20,7 @@
 	import PowerIcon from '@lucide/svelte/icons/power';
 	import ShieldIcon from '@lucide/svelte/icons/shield';
 	import SwordsIcon from '@lucide/svelte/icons/swords';
+	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import UserPlusIcon from '@lucide/svelte/icons/user-plus';
 	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
@@ -48,17 +49,32 @@
 	const busy = $derived(['provisioning', 'starting', 'stopping'].includes(data.server.status));
 	const stopped = $derived(data.server.status === 'stopped' || data.server.status === 'error');
 
-	let powerForm: HTMLFormElement;
-	let whitelistForm: HTMLFormElement;
-
 	let deleteOpen = $state(false);
 	let deleteConfirm = $state('');
 
+	// --- editable state (dirty -> floating apply bar) ---
 	let gamemode = $state(untrack(() => data.server.settings.gamemode));
 	let difficulty = $state(untrack(() => data.server.settings.difficulty));
+	let motd = $state(untrack(() => data.server.settings.motd));
 	let pvp = $state(untrack(() => data.server.settings.pvp));
 	let allowlistEnabled = $state(untrack(() => data.server.settings.allowlistEnabled));
 	let friends = $state(untrack(() => [...data.server.settings.allowlist]));
+	let dirty = $state(false);
+	let applying = $state(false);
+
+	function touch() {
+		dirty = true;
+	}
+
+	function discard() {
+		gamemode = data.server.settings.gamemode;
+		difficulty = data.server.settings.difficulty;
+		motd = data.server.settings.motd;
+		pvp = data.server.settings.pvp;
+		allowlistEnabled = data.server.settings.allowlistEnabled;
+		friends = [...data.server.settings.allowlist];
+		dirty = false;
+	}
 
 	const statusLabel: Record<string, string> = {
 		running: 'Online',
@@ -85,33 +101,39 @@
 </svelte:head>
 
 <div class="mx-auto flex max-w-2xl flex-col gap-5">
-	<!-- hero -->
-	<div>
-		<div class="relative">
-			<img
-				src="/images/types/{data.server.type}.png"
-				alt={data.server.type}
-				class="h-40 w-full rounded-2xl border border-border object-cover sm:h-52"
-			/>
-		</div>
-		<div class="-mt-7 ml-4 flex items-end gap-3">
-			<span class="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-primary shadow-sm">
-				<TypeIcon class="size-7" />
-			</span>
-			<div class="min-w-0 pb-1">
-				<div class="flex items-center gap-2">
-					<h1 class="truncate text-xl font-bold text-foreground">{data.server.name}</h1>
-					<Badge class={statusClass[data.server.status]}>{statusLabel[data.server.status] ?? data.server.status}</Badge>
-				</div>
-				<button
-					onclick={copyAddress}
-					class="mt-0.5 flex items-center gap-1.5 font-mono text-sm text-primary hover:underline"
-				>
-					{address}
-					{#if copied}<CheckIcon class="size-3.5" />{:else}<CopyIcon class="size-3.5" />{/if}
-				</button>
+	<!-- header -->
+	<div class="flex flex-wrap items-center gap-3">
+		<span class="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-primary shadow-sm">
+			<TypeIcon class="size-7" />
+		</span>
+		<div class="min-w-0 flex-1">
+			<div class="flex items-center gap-2">
+				<h1 class="truncate text-xl font-bold text-foreground">{data.server.name}</h1>
+				<Badge class={statusClass[data.server.status]}>{statusLabel[data.server.status] ?? data.server.status}</Badge>
 			</div>
+			<button
+				onclick={copyAddress}
+				class="mt-0.5 flex items-center gap-1.5 font-mono text-sm text-primary hover:underline"
+			>
+				{address}
+				{#if copied}<CheckIcon class="size-3.5" />{:else}<CopyIcon class="size-3.5" />{/if}
+			</button>
 		</div>
+		<form method="POST" action="?/power" use:enhance>
+			{#if stopped}
+				<Button type="submit" name="action" value="start" class="rounded-xl">
+					<PowerIcon /> Start
+				</Button>
+			{:else if running}
+				<Button type="submit" name="action" value="stop" variant="secondary" class="rounded-xl">
+					<PowerIcon /> Stop
+				</Button>
+			{:else}
+				<Button disabled class="rounded-xl">
+					<PowerIcon /> Working...
+				</Button>
+			{/if}
+		</form>
 	</div>
 
 	<!-- core controls -->
@@ -124,47 +146,38 @@
 		<Card.Content class="flex flex-col gap-3">
 			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
 				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-					<PowerIcon class="size-5" />
-				</span>
-				<div class="min-w-0 flex-1">
-					<p class="text-sm font-medium text-foreground">Server Status</p>
-					<p class="text-xs text-muted-foreground">
-						{running ? 'Currently running' : busy ? 'Changing state...' : 'Currently offline'}
-					</p>
-				</div>
-				<form bind:this={powerForm} method="POST" action="?/power" use:enhance>
-					<input type="hidden" name="action" value={running ? 'stop' : 'start'} />
-					<Switch
-						checked={running}
-						disabled={busy || data.server.status === 'suspended'}
-						aria-label="Server power"
-						onCheckedChange={() => powerForm.requestSubmit()}
-					/>
-				</form>
-			</div>
-
-			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
 					<ShieldIcon class="size-5" />
 				</span>
 				<div class="min-w-0 flex-1">
 					<p class="text-sm font-medium text-foreground">Friends Only</p>
 					<p class="text-xs text-muted-foreground">Only approved players can join</p>
 				</div>
-				<form bind:this={whitelistForm} method="POST" action="?/saveAllowlist" use:enhance>
-					<input type="checkbox" name="allowlistEnabled" bind:checked={allowlistEnabled} class="hidden" tabindex="-1" aria-hidden="true" />
-					{#each friends as friend (friend)}
-						<input type="hidden" name="friend" value={friend} />
-					{/each}
-					<Switch
-						checked={allowlistEnabled}
-						aria-label="Friends only"
-						onCheckedChange={(v) => {
-							allowlistEnabled = v;
-							whitelistForm.requestSubmit();
-						}}
-					/>
-				</form>
+				<Switch
+					checked={allowlistEnabled}
+					aria-label="Friends only"
+					onCheckedChange={(v) => {
+						allowlistEnabled = v;
+						touch();
+					}}
+				/>
+			</div>
+
+			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+					<SwordsIcon class="size-5" />
+				</span>
+				<div class="min-w-0 flex-1">
+					<p class="text-sm font-medium text-foreground">PvP</p>
+					<p class="text-xs text-muted-foreground">Players can hurt each other</p>
+				</div>
+				<Switch
+					checked={pvp}
+					aria-label="PvP"
+					onCheckedChange={(v) => {
+						pvp = v;
+						touch();
+					}}
+				/>
 			</div>
 		</Card.Content>
 	</Card.Root>
@@ -176,54 +189,42 @@
 				<Gamepad2Icon class="size-4 text-muted-foreground" /> Gameplay
 			</Card.Title>
 		</Card.Header>
-		<Card.Content>
-			<form method="POST" action="?/saveSettings" use:enhance class="flex flex-col gap-4">
-				<div class="flex flex-col gap-2">
-					<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Game mode</Label>
-					<Select.Root type="single" name="gamemode" bind:value={gamemode}>
-						<Select.Trigger class="h-11 w-full rounded-xl bg-input capitalize">{gamemode}</Select.Trigger>
-						<Select.Content>
-							<Select.Item value="survival" class="capitalize">Survival</Select.Item>
-							<Select.Item value="creative" class="capitalize">Creative</Select.Item>
-						</Select.Content>
-					</Select.Root>
-				</div>
+		<Card.Content class="flex flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Game mode</Label>
+				<Select.Root type="single" bind:value={gamemode} onValueChange={touch}>
+					<Select.Trigger class="h-11 w-full rounded-xl bg-input capitalize">{gamemode}</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="survival" class="capitalize">Survival</Select.Item>
+						<Select.Item value="creative" class="capitalize">Creative</Select.Item>
+					</Select.Content>
+				</Select.Root>
+			</div>
 
-				<div class="flex flex-col gap-2">
-					<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Difficulty</Label>
-					<Select.Root type="single" name="difficulty" bind:value={difficulty}>
-						<Select.Trigger class="h-11 w-full rounded-xl bg-input capitalize">{difficulty}</Select.Trigger>
-						<Select.Content>
-							{#each ['peaceful', 'easy', 'normal', 'hard'] as d (d)}
-								<Select.Item value={d} class="capitalize">{d}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-				</div>
+			<div class="flex flex-col gap-2">
+				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Difficulty</Label>
+				<Select.Root type="single" bind:value={difficulty} onValueChange={touch}>
+					<Select.Trigger class="h-11 w-full rounded-xl bg-input capitalize">{difficulty}</Select.Trigger>
+					<Select.Content>
+						{#each ['peaceful', 'easy', 'normal', 'hard'] as d (d)}
+							<Select.Item value={d} class="capitalize">{d}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
 
-				<div class="flex flex-col gap-2">
-					<Label for="motd" class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-						Message of the day
-					</Label>
-					<Input id="motd" name="motd" value={data.server.settings.motd} maxlength={64} class="h-11 rounded-xl bg-input" />
-				</div>
-
-				<div class="flex items-center gap-3">
-					<Switch id="pvp" bind:checked={pvp} />
-					<Label for="pvp" class="cursor-pointer">PvP (players can hurt each other)</Label>
-					<input type="checkbox" name="pvp" bind:checked={pvp} class="hidden" tabindex="-1" aria-hidden="true" />
-				</div>
-
-				{#if form?.error}
-					<p class="text-sm text-destructive">{form.error}</p>
-				{/if}
-				{#if form?.saved}
-					<p class="text-sm font-medium text-primary">Saved</p>
-				{/if}
-				<div>
-					<Button type="submit" class="rounded-xl">Save gameplay</Button>
-				</div>
-			</form>
+			<div class="flex flex-col gap-2">
+				<Label for="motd" class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+					Message of the day
+				</Label>
+				<Input
+					id="motd"
+					bind:value={motd}
+					maxlength={64}
+					class="h-11 rounded-xl bg-input"
+					oninput={touch}
+				/>
+			</div>
 		</Card.Content>
 	</Card.Root>
 
@@ -236,13 +237,7 @@
 			<Card.Description>Instantly grant access to a trusted friend.</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<form method="POST" action="?/saveAllowlist" use:enhance class="flex flex-col gap-4">
-				<input type="checkbox" name="allowlistEnabled" bind:checked={allowlistEnabled} class="hidden" tabindex="-1" aria-hidden="true" />
-				<FriendsEditor bind:friends />
-				<div>
-					<Button type="submit" class="rounded-xl">Save players</Button>
-				</div>
-			</form>
+			<FriendsEditor bind:friends onchange={touch} />
 		</Card.Content>
 	</Card.Root>
 
@@ -322,6 +317,44 @@
 		</Card.Content>
 	</Card.Root>
 </div>
+
+<!-- floating apply bar -->
+{#if dirty}
+	<div class="fixed inset-x-4 bottom-20 z-50 mx-auto max-w-2xl md:bottom-6">
+		<form
+			method="POST"
+			action="?/apply"
+			use:enhance={() => {
+				applying = true;
+				return async ({ update }) => {
+					applying = false;
+					dirty = false;
+					await update();
+				};
+			}}
+		>
+			<input type="hidden" name="gamemode" value={gamemode} />
+			<input type="hidden" name="difficulty" value={difficulty} />
+			<input type="hidden" name="motd" value={motd} />
+			<input type="checkbox" name="pvp" checked={pvp} class="hidden" tabindex="-1" aria-hidden="true" />
+			<input type="checkbox" name="allowlistEnabled" checked={allowlistEnabled} class="hidden" tabindex="-1" aria-hidden="true" />
+			{#each friends as friend (friend)}
+				<input type="hidden" name="friend" value={friend} />
+			{/each}
+
+			<div class="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-lg">
+				<TriangleAlertIcon class="size-5 shrink-0 text-amber-600" />
+				<p class="min-w-0 flex-1 text-xs text-muted-foreground sm:text-sm">
+					Unsaved changes. Applying restarts the server.
+				</p>
+				<Button type="button" variant="ghost" size="sm" onclick={discard} disabled={applying}>Discard</Button>
+				<Button type="submit" size="sm" class="rounded-lg" disabled={applying}>
+					{applying ? 'Applying...' : 'Apply changes'}
+				</Button>
+			</div>
+		</form>
+	</div>
+{/if}
 
 <Dialog.Root bind:open={deleteOpen}>
 	<Dialog.Content>

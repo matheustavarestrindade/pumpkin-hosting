@@ -6,9 +6,10 @@
 
 	type Props = {
 		friends: string[];
+		onchange?: () => void;
 	};
 
-	let { friends = $bindable() }: Props = $props();
+	let { friends = $bindable(), onchange }: Props = $props();
 
 	let input = $state('');
 	let error = $state('');
@@ -36,6 +37,7 @@
 			}
 			friends = [...friends, data.name];
 			input = '';
+			onchange?.();
 		} catch {
 			error = 'Could not check the name. Try again.';
 		} finally {
@@ -45,6 +47,7 @@
 
 	function removeFriend(name: string) {
 		friends = friends.filter((f) => f !== name);
+		onchange?.();
 	}
 </script>
 
@@ -75,10 +78,6 @@
 	{#if error}
 		<p class="text-sm text-destructive">{error}</p>
 	{/if}
-
-	{#each friends as friend (friend)}
-		<input type="hidden" name="friend" value={friend} />
-	{/each}
 
 	{#if friends.length === 0}
 		<p class="text-sm text-muted-foreground">No players added yet.</p>
