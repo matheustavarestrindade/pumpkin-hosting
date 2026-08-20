@@ -139,19 +139,37 @@
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-3">
-			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg {running ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}">
-					<PowerIcon class="size-5" />
-				</span>
-				<div class="min-w-0 flex-1">
-					<p class="text-sm font-medium text-foreground">Server Status</p>
-					<p class="text-xs text-muted-foreground">
-						{running ? 'Online - players can join' : busy ? 'Changing state...' : 'Offline - players cannot join'}
-					</p>
+			<div
+				class="relative flex flex-col gap-3 rounded-xl border p-3 transition-colors {running
+					? 'border-primary/40 bg-primary/10'
+					: 'border-destructive/40 bg-destructive/10'}"
+			>
+				<Badge
+					class="absolute top-3 right-3 border-transparent {running
+						? 'bg-primary text-primary-foreground'
+						: 'bg-destructive text-destructive-foreground'}"
+				>
+					{running ? 'Online' : busy ? (statusLabel[data.server.status] ?? 'Working') : 'Offline'}
+				</Badge>
+				<div class="flex items-center gap-3">
+					<span
+						class="flex size-10 shrink-0 items-center justify-center rounded-lg {running
+							? 'bg-primary/15 text-primary'
+							: 'bg-destructive/15 text-destructive'}"
+					>
+						<PowerIcon class="size-5" />
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block text-sm font-medium text-foreground">Server Status</span>
+						<span class="block text-xs text-muted-foreground">
+							{running ? 'Players can join' : busy ? 'Changing state...' : 'Players cannot join'}
+						</span>
+					</span>
 				</div>
 				<form
 					method="POST"
 					action="?/power"
+					class="self-end"
 					use:enhance={() => {
 						powerBusy = true;
 						return async ({ update }) => {
