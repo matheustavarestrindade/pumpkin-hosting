@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { cn } from '$lib/utils';
@@ -25,15 +26,15 @@
 		flat: LayersIcon
 	};
 
-	const statusLabel: Record<string, string> = {
-		running: 'Online',
-		sleeping: 'Sleeping',
-		stopped: 'Offline',
-		provisioning: 'Waiting payment',
-		starting: 'Starting',
-		stopping: 'Stopping',
-		error: 'Error',
-		suspended: 'Suspended'
+	const statusLabel: Record<string, () => string> = {
+		running: m.status_running,
+		sleeping: m.status_sleeping,
+		stopped: m.status_stopped,
+		provisioning: m.status_provisioning,
+		starting: m.status_starting,
+		stopping: m.status_stopping,
+		error: m.status_error,
+		suspended: m.status_suspended
 	};
 
 	const statusClass: Record<string, string> = {
@@ -69,7 +70,7 @@
 		</span>
 		<span class="mt-1.5 inline-flex">
 			<Badge class={cn('px-2 py-0.5 text-xs', statusClass[displayStatus])}>
-				{statusLabel[displayStatus] ?? displayStatus}
+				{statusLabel[displayStatus]?.() ?? displayStatus}
 			</Badge>
 		</span>
 	</span>

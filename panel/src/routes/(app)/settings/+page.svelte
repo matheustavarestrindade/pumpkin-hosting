@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -29,10 +30,10 @@
 		});
 		loading = false;
 		if (err) {
-			error = err.message ?? 'Could not change password';
+			error = err.message ?? m.settings_password_error();
 			return;
 		}
-		message = 'Password changed';
+		message = m.settings_password_done();
 		currentPassword = '';
 		newPassword = '';
 	}
@@ -44,16 +45,16 @@
 </script>
 
 <svelte:head>
-	<title>Profile - hosting-mc</title>
+	<title>{m.settings_title()} - hosting-mc</title>
 </svelte:head>
 
 <div class="mx-auto flex max-w-2xl flex-col gap-5">
-	<h1 class="text-2xl font-bold text-foreground">Profile</h1>
+	<h1 class="text-2xl font-bold text-foreground">{m.settings_title()}</h1>
 
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
-				<UserIcon class="size-4 text-muted-foreground" /> Account
+				<UserIcon class="size-4 text-muted-foreground" /> {m.settings_account()}
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex items-center gap-3">
@@ -69,12 +70,12 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-base">Change password</Card.Title>
+			<Card.Title class="text-base">{m.settings_password()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<form onsubmit={changePassword} class="flex flex-col gap-4">
 				<div class="flex flex-col gap-2">
-					<Label for="current">Current password</Label>
+					<Label for="current">{m.settings_password_current()}</Label>
 					<Input
 						id="current"
 						type="password"
@@ -84,7 +85,7 @@
 					/>
 				</div>
 				<div class="flex flex-col gap-2">
-					<Label for="new">New password</Label>
+					<Label for="new">{m.settings_password_new()}</Label>
 					<Input
 						id="new"
 						type="password"
@@ -102,10 +103,10 @@
 				{/if}
 				<div class="flex gap-2">
 					<Button type="submit" disabled={loading}>
-						{loading ? 'Saving...' : 'Change password'}
+						{loading ? m.settings_saving() : m.settings_password_button()}
 					</Button>
 					<Button type="button" variant="secondary" onclick={logout}>
-						<LogOutIcon /> Log out
+						<LogOutIcon /> {m.nav_logout()}
 					</Button>
 				</div>
 			</form>

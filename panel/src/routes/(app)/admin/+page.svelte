@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import * as Card from '$lib/components/ui/card';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import ServerIcon from '@lucide/svelte/icons/server';
@@ -22,11 +23,11 @@
 </script>
 
 <svelte:head>
-	<title>Admin - hosting-mc</title>
+	<title>{m.nav_admin()} - hosting-mc</title>
 </svelte:head>
 
 <div class="mx-auto flex max-w-4xl flex-col gap-6">
-	<h1 class="text-2xl font-bold text-foreground">Admin</h1>
+	<h1 class="text-2xl font-bold text-foreground">{m.admin_title()}</h1>
 
 	<div class="grid grid-cols-3 gap-3">
 		<Card.Root>
@@ -36,7 +37,7 @@
 				</span>
 				<span>
 					<span class="block text-2xl font-bold text-foreground">{data.stats.totalServers}</span>
-					<span class="text-xs text-muted-foreground">Servers</span>
+					<span class="text-xs text-muted-foreground">{m.admin_stats_servers()}</span>
 				</span>
 			</Card.Content>
 		</Card.Root>
@@ -47,7 +48,7 @@
 				</span>
 				<span>
 					<span class="block text-2xl font-bold text-foreground">{data.stats.runningServers}</span>
-					<span class="text-xs text-muted-foreground">Running</span>
+					<span class="text-xs text-muted-foreground">{m.admin_stats_running()}</span>
 				</span>
 			</Card.Content>
 		</Card.Root>
@@ -58,7 +59,7 @@
 				</span>
 				<span>
 					<span class="block text-2xl font-bold text-foreground">{data.stats.totalUsers}</span>
-					<span class="text-xs text-muted-foreground">Users</span>
+					<span class="text-xs text-muted-foreground">{m.admin_stats_users()}</span>
 				</span>
 			</Card.Content>
 		</Card.Root>
@@ -66,8 +67,8 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-base">Nodes</Card.Title>
-			<Card.Description>Machines running game servers. Heartbeat every 60s.</Card.Description>
+			<Card.Title class="text-base">{m.admin_nodes()}</Card.Title>
+			<Card.Description>{m.admin_nodes_sub()}</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-2">
 			{#each data.nodes as node (node.id)}
@@ -79,19 +80,19 @@
 						<span class="block font-mono text-xs text-muted-foreground">{node.apiUrl}</span>
 					</span>
 					<span class="text-xs text-muted-foreground">
-						{healthy ? 'healthy' : 'last seen ' + timeAgo(node.lastSeenAt)}
+						{healthy ? m.admin_nodes_healthy() : m.admin_nodes_last_seen({ ago: timeAgo(node.lastSeenAt) })}
 					</span>
 				</div>
 			{:else}
-				<p class="text-sm text-muted-foreground">No nodes registered.</p>
+				<p class="text-sm text-muted-foreground">{m.admin_nodes_none()}</p>
 			{/each}
 		</Card.Content>
 	</Card.Root>
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-base">Servers</Card.Title>
-			<Card.Description>Latest 100 servers across all users.</Card.Description>
+			<Card.Title class="text-base">{m.admin_servers()}</Card.Title>
+			<Card.Description>{m.admin_servers_sub()}</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-2">
 			{#each data.servers as server (server.id)}
@@ -104,15 +105,15 @@
 					<Badge class="bg-muted text-muted-foreground">{server.status}</Badge>
 				</a>
 			{:else}
-				<p class="text-sm text-muted-foreground">No servers yet.</p>
+				<p class="text-sm text-muted-foreground">{m.admin_servers_none()}</p>
 			{/each}
 		</Card.Content>
 	</Card.Root>
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-base">Users</Card.Title>
-			<Card.Description>Latest 100 registered users.</Card.Description>
+			<Card.Title class="text-base">{m.admin_users()}</Card.Title>
+			<Card.Description>{m.admin_users_sub()}</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-2">
 			{#each data.users as u (u.id)}
@@ -124,7 +125,7 @@
 						<span class="block truncate text-sm font-medium text-foreground">{u.name}</span>
 						<span class="block truncate text-xs text-muted-foreground">{u.email}</span>
 					</span>
-					<span class="text-xs text-muted-foreground">{u.serverCount} servers</span>
+					<span class="text-xs text-muted-foreground">{m.admin_users_servers({ count: u.serverCount })}</span>
 				</div>
 			{/each}
 		</Card.Content>

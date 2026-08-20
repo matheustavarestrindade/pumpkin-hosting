@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import * as m from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils';
 	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import UserIcon from '@lucide/svelte/icons/user';
 
-	const tabs = [
-		{ label: 'Dashboard', href: '/dashboard', icon: LayoutGridIcon },
-		{ label: 'Create', href: '/servers/new', icon: PlusIcon },
-		{ label: 'Profile', href: '/settings', icon: UserIcon }
-	];
+	const tabs = $derived([
+		{ label: m.nav_dashboard(), href: '/dashboard', icon: LayoutGridIcon },
+		{ label: m.nav_create(), href: '/servers/new', icon: PlusIcon },
+		{ label: m.nav_profile(), href: '/settings', icon: UserIcon }
+	]);
 
 	function isActive(href: string) {
 		if (href === '/dashboard') return page.url.pathname === '/dashboard';

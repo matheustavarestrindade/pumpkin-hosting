@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import PlusIcon from '@lucide/svelte/icons/plus';
@@ -24,7 +25,7 @@
 		error = '';
 		if (!name) return;
 		if (friends.some((f) => f.toLowerCase() === name.toLowerCase())) {
-			error = 'Already in the list';
+			error = m.friends_duplicate();
 			return;
 		}
 		checking = true;
@@ -32,14 +33,14 @@
 			const res = await fetch(`/api/mc-player?name=${encodeURIComponent(name)}`);
 			const data = await res.json();
 			if (!data.valid) {
-				error = data.reason ?? 'Player not found';
+				error = data.reason ?? m.friends_not_found();
 				return;
 			}
 			friends = [...friends, data.name];
 			input = '';
 			onchange?.();
 		} catch {
-			error = 'Could not check the name. Try again.';
+			error = m.friends_error();
 		} finally {
 			checking = false;
 		}
@@ -54,7 +55,7 @@
 <div class="flex flex-col gap-3">
 	<div class="flex gap-2">
 		<Input
-			placeholder="Minecraft username"
+			placeholder={m.friends_placeholder()}
 			bind:value={input}
 			maxlength={16}
 			onkeydown={(e) => {
@@ -69,7 +70,7 @@
 			size="icon-lg"
 			onclick={addFriend}
 			disabled={checking || !input.trim()}
-			aria-label="Add player"
+			aria-label={m.friends_add_label()}
 		>
 			<PlusIcon />
 		</Button>
@@ -79,7 +80,7 @@
 	{/if}
 
 	{#if friends.length === 0}
-		<p class="text-sm text-muted-foreground">No players added yet.</p>
+		<p class="text-sm text-muted-foreground">{m.friends_empty()}</p>
 	{:else}
 		<ul class="flex flex-col gap-2">
 			{#each friends as friend (friend)}
@@ -91,7 +92,7 @@
 						variant="ghost"
 						size="icon-sm"
 						onclick={() => removeFriend(friend)}
-						aria-label="Remove {friend}"
+						aria-label={m.friends_remove_label({ name: friend })}
 					>
 						<XIcon />
 					</Button>

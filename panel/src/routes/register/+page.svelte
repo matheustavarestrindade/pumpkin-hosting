@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -20,7 +21,7 @@
 		const { error: err } = await authClient.signUp.email({ name, email, password });
 		loading = false;
 		if (err) {
-			error = err.message ?? 'Signup failed';
+			error = err.message ?? m.auth_error_signup();
 			return;
 		}
 		goto('/dashboard');
@@ -32,21 +33,21 @@
 <main class="mx-auto flex max-w-sm flex-col px-4 py-16 sm:py-24">
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Create your account</Card.Title>
-			<Card.Description>Start hosting in a minute</Card.Description>
+			<Card.Title>{m.auth_register_title()}</Card.Title>
+			<Card.Description>{m.auth_register_sub()}</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<form onsubmit={submit} class="flex flex-col gap-4">
 				<div class="flex flex-col gap-2">
-					<Label for="name">Name</Label>
+					<Label for="name">{m.auth_name()}</Label>
 					<Input id="name" bind:value={name} required autocomplete="name" />
 				</div>
 				<div class="flex flex-col gap-2">
-					<Label for="email">Email</Label>
+					<Label for="email">{m.auth_email()}</Label>
 					<Input id="email" type="email" bind:value={email} required autocomplete="email" />
 				</div>
 				<div class="flex flex-col gap-2">
-					<Label for="password">Password</Label>
+					<Label for="password">{m.auth_password()}</Label>
 					<Input
 						id="password"
 						type="password"
@@ -59,11 +60,11 @@
 				{#if error}
 					<p class="text-sm text-destructive">{error}</p>
 				{/if}
-				<Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Sign up'}</Button>
+				<Button type="submit" disabled={loading}>{loading ? m.auth_creating() : m.auth_signup()}</Button>
 			</form>
 		</Card.Content>
 	</Card.Root>
 	<p class="mt-4 text-center text-sm text-muted-foreground">
-		Already have an account? <a href="/login" class="text-primary hover:underline">Log in</a>
+		{m.auth_have_account()} <a href="/login" class="text-primary hover:underline">{m.auth_login_button()}</a>
 	</p>
 </main>

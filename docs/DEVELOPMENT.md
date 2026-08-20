@@ -36,6 +36,17 @@ Seed once after a fresh DB: `docker compose exec panel node scripts/seed.mjs`.
 - Agent: axum handlers in routes.rs, Docker in docker.rs, DB in db.rs,
   reconcile loop in reconcile.rs. Errors log via tracing.
 
+### Internationalization (i18n)
+
+- Paraglide JS (`@inlang/paraglide-js`). Catalog: `panel/messages/en.json`.
+- NEVER hardcode user-facing strings. Use `import * as m from '$lib/paraglide/messages'`
+  and call `m.some_key()` (works in .svelte and server files; locale resolved by
+  the middleware in hooks.server.ts).
+- After editing en.json, `paraglide-js compile` runs automatically on
+  `npm run check` / `npm run build` (pre-scripts).
+- Add a locale later: add to `locales` in project.inlang/settings.json and create
+  messages/<locale>.json with the same keys.
+
 ## Gotchas learned the hard way
 
 1. **Postgres enums + sqlx**: cast to text in queries (`status::text as status`),

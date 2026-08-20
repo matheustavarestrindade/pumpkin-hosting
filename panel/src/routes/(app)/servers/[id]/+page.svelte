@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { env } from '$env/dynamic/public';
 	import { enhance } from '$app/forms';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
@@ -82,15 +83,15 @@
 		friends = [...data.server.settings.allowlist];
 	}
 
-	const statusLabel: Record<string, string> = {
-		running: 'Online',
-		sleeping: 'Sleeping',
-		stopped: 'Offline',
-		provisioning: 'Waiting payment',
-		starting: 'Starting',
-		stopping: 'Stopping',
-		error: 'Error',
-		suspended: 'Suspended'
+	const statusLabel: Record<string, () => string> = {
+		running: m.status_running,
+		sleeping: m.status_sleeping,
+		stopped: m.status_stopped,
+		provisioning: m.status_provisioning,
+		starting: m.status_starting,
+		stopping: m.status_stopping,
+		error: m.status_error,
+		suspended: m.status_suspended
 	};
 	const statusClass: Record<string, string> = {
 		running: 'bg-primary/15 text-primary border-transparent',
@@ -128,7 +129,7 @@
 		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2">
 				<h1 class="truncate text-xl font-bold text-foreground">{data.server.name}</h1>
-				<Badge class={statusClass[displayStatus]}>{statusLabel[displayStatus] ?? displayStatus}</Badge>
+				<Badge class={statusClass[displayStatus]}>{statusLabel[displayStatus]?.() ?? displayStatus}</Badge>
 			</div>
 			<button
 				onclick={copyAddress}
@@ -144,7 +145,7 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
-				<PowerIcon class="size-4 text-muted-foreground" /> Core Controls
+				<PowerIcon class="size-4 text-muted-foreground" /> {m.server_core_controls()}
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-3">
@@ -177,7 +178,7 @@
 								? 'bg-primary text-primary-foreground'
 								: 'bg-destructive text-destructive-foreground'}"
 					>
-						{statusLabel[displayStatus] ?? displayStatus}
+						{statusLabel[displayStatus]?.() ?? displayStatus}
 					</Badge>
 					<span
 						class="flex size-10 shrink-0 items-center justify-center rounded-lg {sleeping
@@ -193,18 +194,18 @@
 						{/if}
 					</span>
 					<span class="min-w-0 flex-1">
-						<span class="block text-sm font-medium text-foreground">Server Status</span>
+						<span class="block text-sm font-medium text-foreground">{m.server_status_title()}</span>
 						<span class="block text-xs text-muted-foreground">
 							{#if powerBusy}
-								{running ? 'Stopping...' : 'Starting...'}
+								{running ? m.server_status_stopping() : m.server_status_starting()}
 							{:else if busy}
-								{statusLabel[displayStatus]}...
+								{statusLabel[displayStatus]?.()}...
 							{:else if sleeping}
-								Asleep - wakes automatically when a player joins. Click to stop.
+								{m.server_status_sleeping_sub()}
 							{:else if running}
-								Players can join - click to stop
+								{m.server_status_online_sub()}
 							{:else}
-								Players cannot join - click to start
+								{m.server_status_offline_sub()}
 							{/if}
 						</span>
 					</span>
@@ -225,8 +226,8 @@
 					<ShieldIcon class="size-5" />
 				</span>
 				<span class="min-w-0 flex-1">
-					<span class="block text-sm font-medium text-foreground">Friends Only</span>
-					<span class="block text-xs text-muted-foreground">Only approved players can join</span>
+					<span class="block text-sm font-medium text-foreground">{m.server_friends_only()}</span>
+					<span class="block text-xs text-muted-foreground">{m.server_friends_only_sub()}</span>
 				</span>
 			</button>
 
@@ -244,8 +245,8 @@
 					<SwordsIcon class="size-5" />
 				</span>
 				<span class="min-w-0 flex-1">
-					<span class="block text-sm font-medium text-foreground">PvP</span>
-					<span class="block text-xs text-muted-foreground">Players can hurt each other</span>
+					<span class="block text-sm font-medium text-foreground">{m.server_pvp()}</span>
+					<span class="block text-xs text-muted-foreground">{m.server_pvp_sub()}</span>
 				</span>
 			</button>
 		</Card.Content>
@@ -255,12 +256,12 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
-				<Gamepad2Icon class="size-4 text-muted-foreground" /> Gameplay
+				<Gamepad2Icon class="size-4 text-muted-foreground" /> {m.server_gameplay()}
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
-				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Game mode</Label>
+				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{m.server_gamemode()}</Label>
 				<Select.Root type="single" bind:value={gamemode}>
 					<Select.Trigger class="capitalize">{gamemode}</Select.Trigger>
 					<Select.Content>
@@ -271,7 +272,7 @@
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Difficulty</Label>
+				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{m.server_difficulty()}</Label>
 				<Select.Root type="single" bind:value={difficulty}>
 					<Select.Trigger class="capitalize">{difficulty}</Select.Trigger>
 					<Select.Content>
@@ -284,7 +285,7 @@
 
 			<div class="flex flex-col gap-2">
 				<Label for="motd" class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-					Message of the day
+					{m.server_motd()}
 				</Label>
 				<Input
 					id="motd"
@@ -299,9 +300,9 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
-				<UserPlusIcon class="size-4 text-muted-foreground" /> Players
+				<UserPlusIcon class="size-4 text-muted-foreground" /> {m.server_players()}
 			</Card.Title>
-			<Card.Description>Instantly grant access to a trusted friend.</Card.Description>
+			<Card.Description>{m.server_players_sub()}</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<FriendsEditor bind:friends />
@@ -312,13 +313,13 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
-				<DownloadIcon class="size-4 text-muted-foreground" /> World
+				<DownloadIcon class="size-4 text-muted-foreground" /> {m.server_world()}
 			</Card.Title>
-			<Card.Description>Download a full copy of your world as a zip, even while stopped.</Card.Description>
+			<Card.Description>{m.server_world_sub()}</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<Button variant="secondary" href="/servers/{data.server.id}/world.zip">
-				<DownloadIcon /> Download world
+				<DownloadIcon /> {m.server_world_download()}
 			</Button>
 		</Card.Content>
 	</Card.Root>
@@ -326,25 +327,25 @@
 	<!-- billing -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-base">Billing</Card.Title>
+			<Card.Title class="text-base">{m.server_billing()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<dl class="space-y-2 text-sm">
 				<div class="flex justify-between">
-					<dt class="text-muted-foreground">Plan</dt>
+					<dt class="text-muted-foreground">{m.server_billing_plan()}</dt>
 					<dd class="text-foreground">Friends</dd>
 				</div>
 				<div class="flex justify-between">
-					<dt class="text-muted-foreground">Status</dt>
+					<dt class="text-muted-foreground">{m.server_billing_status()}</dt>
 					<dd class="text-foreground">
 						{#if !data.billing.enabled}
-							Dev mode (no payment)
+							{m.server_billing_dev()}
 						{:else if data.server.stripeSubscriptionId}
-							Active subscription
+							{m.server_billing_active()}
 						{:else if data.server.status === 'suspended'}
-							Suspended - payment needed
+							{m.server_billing_suspended()}
 						{:else}
-							Payment not completed
+							{m.server_billing_unpaid()}
 						{/if}
 					</dd>
 				</div>
@@ -352,20 +353,20 @@
 			<div class="mt-4 flex flex-wrap gap-2">
 				{#if data.billing.enabled && data.server.stripeSubscriptionId && data.billing.hasCustomer}
 					<form method="POST" action="?/portal">
-						<Button type="submit" variant="secondary">Manage billing</Button>
+						<Button type="submit" variant="secondary">{m.server_billing_manage()}</Button>
 					</form>
 				{/if}
 				{#if data.billing.enabled && !data.server.stripeSubscriptionId}
 					<form method="POST" action="?/payNow">
 						<Button type="submit">
-							{data.server.status === 'suspended' ? 'Reactivate subscription' : 'Complete payment'}
+							{data.server.status === 'suspended' ? m.server_billing_reactivate() : m.server_billing_pay()}
 						</Button>
 					</form>
 				{/if}
 			</div>
 			{#if data.server.status === 'suspended'}
 				<p class="mt-3 text-sm text-muted-foreground">
-					Your server is paused. Reactivate to keep playing. The world is deleted 7 days after cancellation.
+					{m.server_billing_suspended_note()}
 				</p>
 			{/if}
 		</Card.Content>
@@ -374,13 +375,13 @@
 	<!-- danger -->
 	<Card.Root class="rounded-2xl border-destructive/40 shadow-sm">
 		<Card.Header>
-			<Card.Title class="text-base text-destructive">Danger zone</Card.Title>
+			<Card.Title class="text-base text-destructive">{m.server_danger()}</Card.Title>
 			<Card.Description>
-				This stops the server and deletes it. Your world is kept for 7 days, then removed forever.
+				{m.server_danger_sub()}
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<Button variant="destructive" onclick={() => (deleteOpen = true)}>Delete server</Button>
+			<Button variant="destructive" onclick={() => (deleteOpen = true)}>{m.server_danger_delete()}</Button>
 		</Card.Content>
 	</Card.Root>
 </div>
@@ -413,11 +414,11 @@
 			<div class="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-lg">
 				<TriangleAlertIcon class="size-5 shrink-0 text-amber-600" />
 				<p class="min-w-0 flex-1 text-xs text-muted-foreground sm:text-sm">
-					Unsaved changes. Applying restarts the server.
+					{m.server_apply_warning()}
 				</p>
-				<Button type="button" variant="ghost" size="sm" onclick={discard} disabled={applying}>Discard</Button>
+				<Button type="button" variant="ghost" size="sm" onclick={discard} disabled={applying}>{m.server_apply_discard()}</Button>
 				<Button type="submit" size="sm" class="rounded-lg" disabled={applying}>
-					{applying ? 'Applying...' : 'Apply changes'}
+					{applying ? m.server_apply_applying() : m.server_apply_button()}
 				</Button>
 			</div>
 		</form>
@@ -430,7 +431,7 @@
 		<div class="flex items-center gap-3 rounded-2xl border border-primary/40 bg-card p-3 shadow-lg">
 			<CheckIcon class="size-5 shrink-0 text-primary" />
 			<p class="flex-1 text-sm text-foreground">
-				Changes applied{running ? ' - the server is restarting.' : '.'}
+				{running ? m.server_applied() : m.server_applied_stopped()}
 			</p>
 		</div>
 	</div>
@@ -439,16 +440,16 @@
 <Dialog.Root bind:open={deleteOpen}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Delete {data.server.name}?</Dialog.Title>
+			<Dialog.Title>{m.server_delete_title({ name: data.server.name })}</Dialog.Title>
 			<Dialog.Description>
-				Type <span class="font-mono font-medium text-foreground">{data.server.name}</span> to confirm.
+				{m.server_delete_confirm_hint({ name: data.server.name })}
 			</Dialog.Description>
 		</Dialog.Header>
 		<Input bind:value={deleteConfirm} placeholder={data.server.name} />
 		<Dialog.Footer>
-			<Button variant="secondary" onclick={() => (deleteOpen = false)}>Cancel</Button>
+			<Button variant="secondary" onclick={() => (deleteOpen = false)}>{m.server_delete_cancel()}</Button>
 			<form method="POST" action="?/delete">
-				<Button variant="destructive" type="submit" disabled={deleteConfirm !== data.server.name}>Delete</Button>
+				<Button variant="destructive" type="submit" disabled={deleteConfirm !== data.server.name}>{m.server_delete_button()}</Button>
 			</form>
 		</Dialog.Footer>
 	</Dialog.Content>

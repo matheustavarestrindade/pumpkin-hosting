@@ -1,3 +1,4 @@
+import * as m from '$lib/paraglide/messages';
 import { db } from '$lib/server/db';
 import { servers } from '$lib/server/db/schema';
 import { validateSubdomain } from '$lib/subdomains';
@@ -6,7 +7,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-	if (!locals.user) return json({ available: false, reason: 'Not logged in' }, { status: 401 });
+	if (!locals.user) return json({ available: false, reason: m.subdomain_not_logged_in() }, { status: 401 });
 
 	const name = (url.searchParams.get('name') ?? '').toLowerCase();
 	const valid = validateSubdomain(name);
@@ -18,6 +19,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		.where(eq(servers.subdomain, name))
 		.limit(1);
 
-	if (existing.length > 0) return json({ available: false, reason: 'Name is taken' });
+	if (existing.length > 0) return json({ available: false, reason: m.subdomain_taken() });
 	return json({ available: true });
 };

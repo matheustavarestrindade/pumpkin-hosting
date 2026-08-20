@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { env } from '$env/dynamic/public';
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -13,12 +14,12 @@
 
 	const baseDomain = env.PUBLIC_BASE_DOMAIN ?? 'example.com';
 
-	const types = [
-		{ id: 'survival', name: 'Survival', description: 'Classic experience', image: '/images/types/survival.png' },
-		{ id: 'hardcore', name: 'Hardcore', description: 'One life only', image: '/images/types/hardcore.png' },
-		{ id: 'creative', name: 'Creative', description: 'Infinite resources', image: '/images/types/creative.png' },
-		{ id: 'flat', name: 'Superflat', description: "Builder's canvas", image: '/images/types/flat.png' }
-	] as const;
+	const types = $derived([
+		{ id: 'survival', name: m.type_survival(), description: m.type_survival_desc(), image: '/images/types/survival.png' },
+		{ id: 'hardcore', name: m.type_hardcore(), description: m.type_hardcore_desc(), image: '/images/types/hardcore.png' },
+		{ id: 'creative', name: m.type_creative(), description: m.type_creative_desc(), image: '/images/types/creative.png' },
+		{ id: 'flat', name: m.type_flat(), description: m.type_flat_desc(), image: '/images/types/flat.png' }
+	] as const);
 
 	let name = $state('');
 	let selectedType = $state<string>('survival');
@@ -59,12 +60,12 @@
 </script>
 
 <svelte:head>
-	<title>New server - hosting-mc</title>
+	<title>{m.new_title()} - hosting-mc</title>
 </svelte:head>
 
 <div class="mx-auto max-w-2xl">
-	<h1 class="text-2xl font-bold text-foreground">New Adventure</h1>
-	<p class="mt-1 text-sm text-muted-foreground">Configure your new Minecraft server.</p>
+	<h1 class="text-2xl font-bold text-foreground">{m.new_title()}</h1>
+	<p class="mt-1 text-sm text-muted-foreground">{m.new_sub()}</p>
 
 	<form
 		method="POST"
@@ -83,14 +84,14 @@
 
 		<section>
 			<Label for="name" class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-				Server Name
+				{m.new_name_label()}
 			</Label>
 			<div class="mt-2">
 				<Input
 					id="name"
 					name="name"
 					bind:value={name}
-					placeholder="e.g. The Overworld"
+					placeholder={m.new_name_placeholder()}
 					maxlength={32}
 					required
 				/>
@@ -101,9 +102,9 @@
 						{subdomain}.{baseDomain}
 					</span>
 					{#if checking}
-						<span class="text-xs text-muted-foreground">Checking...</span>
+						<span class="text-xs text-muted-foreground">{m.new_checking()}</span>
 					{:else if availability?.available}
-						<span class="text-xs font-medium text-primary">Available</span>
+						<span class="text-xs font-medium text-primary">{m.new_available()}</span>
 					{:else if availability}
 						<span class="text-xs font-medium text-destructive">{availability.reason}</span>
 					{/if}
@@ -112,7 +113,7 @@
 		</section>
 
 		<section>
-			<p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Select Gamemode</p>
+			<p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{m.new_gamemode_label()}</p>
 			<div class="mt-3 grid grid-cols-2 gap-3">
 				{#each types as t (t.id)}
 					<TypeSelectCard
@@ -136,7 +137,7 @@
 				size="lg" class="w-full"
 				disabled={!availability?.available || submitting}
 			>
-				<RocketIcon /> {submitting ? 'Launching...' : `Launch Server · ${price}/month`}
+				<RocketIcon /> {submitting ? m.new_launching() : m.new_launch({ price })}
 			</Button>
 		</div>
 	</form>

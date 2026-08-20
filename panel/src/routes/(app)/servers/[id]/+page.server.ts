@@ -1,3 +1,4 @@
+import * as m from '$lib/paraglide/messages';
 import { agent } from '$lib/server/agent';
 import { db } from '$lib/server/db';
 import { nodes, servers, user as userTable, type ServerSettings } from '$lib/server/db/schema';
@@ -14,7 +15,7 @@ async function getOwnedServer(id: string, userId: string) {
 		.innerJoin(nodes, eq(nodes.id, servers.nodeId))
 		.where(and(eq(servers.id, id), eq(servers.userId, userId)))
 		.limit(1);
-	if (!row) error(404, 'Server not found');
+	if (!row) error(404, m.server_error_not_found());
 	return row;
 }
 
@@ -96,7 +97,7 @@ export const actions: Actions = {
 		try {
 			await agent.applySettings(node, server, settings);
 		} catch {
-			return fail(502, { error: 'Saved, but the server could not be reached. Applies on next start.' });
+			return fail(502, { error: m.server_error_agent() });
 		}
 		return { saved: true };
 	},
@@ -109,7 +110,7 @@ export const actions: Actions = {
 			.from(userTable)
 			.where(eq(userTable.id, user.id))
 			.limit(1);
-		if (!userRow?.stripeCustomerId) return fail(400, { billingError: 'No billing account yet' });
+		if (!userRow?.stripeCustomerId) return fail(400, { billingError: m.server_error_no_billing() });
 		const portalUrl = await createPortalSession(
 			userRow.stripeCustomerId,
 			`${url.origin}/servers/${params.id}`

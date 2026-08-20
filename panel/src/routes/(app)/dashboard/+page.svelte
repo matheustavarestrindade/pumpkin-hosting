@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { env } from '$env/dynamic/public';
 	import ServerCard from '$lib/components/server/ServerCard.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -11,20 +12,20 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard - hosting-mc</title>
+	<title>{m.nav_dashboard()} - hosting-mc</title>
 </svelte:head>
 
 <div class="mx-auto max-w-2xl xl:max-w-4xl">
-	<h1 class="text-2xl font-bold text-foreground">Your Servers</h1>
+	<h1 class="text-2xl font-bold text-foreground">{m.dashboard_title()}</h1>
 
 	{#if data.servers.length === 0}
 		<div class="mt-6 flex flex-col items-center rounded-2xl border border-border bg-card px-4 py-14 text-center shadow-sm">
-			<h2 class="text-lg font-semibold text-foreground">Create your first server</h2>
+			<h2 class="text-lg font-semibold text-foreground">{m.dashboard_empty_title()}</h2>
 			<p class="mt-2 max-w-sm text-sm text-muted-foreground">
-				Pick a name, choose a game type, and you are playing with your friends in under a minute.
+				{m.dashboard_empty_text()}
 			</p>
 			<Button class="mt-6" href="/servers/new">
-				<PlusIcon class="size-4" /> Create a server
+				<PlusIcon class="size-4" /> {m.dashboard_empty_cta()}
 			</Button>
 		</div>
 	{:else}

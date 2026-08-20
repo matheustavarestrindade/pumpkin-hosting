@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { authClient } from '$lib/auth-client';
+	import * as m from '$lib/paraglide/messages';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
@@ -19,10 +20,10 @@
 	let { user, isAdmin = false }: Props = $props();
 
 	const items = $derived([
-		{ title: 'Servers', href: '/dashboard', icon: LayoutGridIcon },
-		{ title: 'New server', href: '/servers/new', icon: PlusIcon },
-		{ title: 'Profile', href: '/settings', icon: UserIcon },
-		...(isAdmin ? [{ title: 'Admin', href: '/admin', icon: ShieldIcon }] : [])
+		{ title: m.nav_servers(), href: '/dashboard', icon: LayoutGridIcon },
+		{ title: m.nav_new_server(), href: '/servers/new', icon: PlusIcon },
+		{ title: m.nav_profile(), href: '/settings', icon: UserIcon },
+		...(isAdmin ? [{ title: m.nav_admin(), href: '/admin', icon: ShieldIcon }] : [])
 	]);
 
 	async function logout() {
@@ -94,7 +95,7 @@
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content side="top" class="w-(--bits-dropdown-menu-anchor-width)">
 						<DropdownMenu.Item onclick={logout}>
-							<LogOutIcon /> Log out
+							<LogOutIcon /> {m.nav_logout()}
 						</DropdownMenu.Item>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>

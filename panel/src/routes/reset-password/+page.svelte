@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { authClient } from '$lib/auth-client';
@@ -19,18 +20,18 @@
 		e.preventDefault();
 		error = '';
 		if (password.length < 8) {
-			error = 'Password must be at least 8 characters';
+			error = m.auth_reset_error_short();
 			return;
 		}
 		if (password !== confirm) {
-			error = 'Passwords do not match';
+			error = m.auth_reset_error_mismatch();
 			return;
 		}
 		loading = true;
 		const res = await authClient.resetPassword({ newPassword: password, token });
 		loading = false;
 		if (res.error) {
-			error = res.error.message ?? 'Reset failed - the link may have expired';
+			error = res.error.message ?? m.auth_reset_error_failed();
 			return;
 		}
 		goto('/login');
@@ -38,7 +39,7 @@
 </script>
 
 <svelte:head>
-	<title>New password - hosting-mc</title>
+	<title>{m.auth_reset_title()} - hosting-mc</title>
 </svelte:head>
 
 <div class="flex min-h-dvh items-center justify-center p-4">
@@ -47,29 +48,29 @@
 			<span class="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
 				<BlocksIcon class="size-5" />
 			</span>
-			<Card.Title class="text-xl">Choose a new password</Card.Title>
+			<Card.Title class="text-xl">{m.auth_reset_title()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			{#if !token}
 				<p class="text-center text-sm text-destructive">
-					This reset link is invalid. Request a new one.
+					{m.auth_reset_invalid()}
 				</p>
-				<Button href="/forgot-password" class="mt-4 w-full">Request new link</Button>
+				<Button href="/forgot-password" class="mt-4 w-full">{m.auth_reset_new_link()}</Button>
 			{:else}
 				<form onsubmit={submit} class="flex flex-col gap-4">
 					<div class="flex flex-col gap-2">
-						<Label for="password">New password</Label>
+						<Label for="password">{m.auth_reset_new()}</Label>
 						<Input id="password" type="password" bind:value={password} required minlength={8} />
 					</div>
 					<div class="flex flex-col gap-2">
-						<Label for="confirm">Confirm password</Label>
+						<Label for="confirm">{m.auth_reset_confirm()}</Label>
 						<Input id="confirm" type="password" bind:value={confirm} required minlength={8} />
 					</div>
 					{#if error}
 						<p class="text-sm text-destructive">{error}</p>
 					{/if}
 					<Button type="submit" class="w-full" disabled={loading}>
-						{loading ? 'Saving...' : 'Save new password'}
+						{loading ? m.settings_saving() : m.auth_reset_button()}
 					</Button>
 				</form>
 			{/if}

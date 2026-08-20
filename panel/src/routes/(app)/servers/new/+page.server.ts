@@ -1,3 +1,4 @@
+import * as m from '$lib/paraglide/messages';
 import { agent } from '$lib/server/agent';
 import { db } from '$lib/server/db';
 import { nodes, plans, servers, user as userTable } from '$lib/server/db/schema';
@@ -23,9 +24,9 @@ export const actions: Actions = {
 		const name = String(form.get('name') ?? '').trim();
 		const type = String(form.get('type') ?? '');
 
-		if (!name) return fail(400, { error: 'Name is required' });
+		if (!name) return fail(400, { error: m.new_error_name() });
 		if (!['survival', 'creative', 'hardcore', 'flat'].includes(type)) {
-			return fail(400, { error: 'Invalid server type' });
+			return fail(400, { error: m.new_error_type() });
 		}
 		const valid = validateSubdomain(subdomain);
 		if (!valid.ok) return fail(400, { error: valid.reason });
@@ -35,14 +36,14 @@ export const actions: Actions = {
 			.from(servers)
 			.where(eq(servers.subdomain, subdomain))
 			.limit(1);
-		if (taken.length > 0) return fail(400, { error: 'Name is taken' });
+		if (taken.length > 0) return fail(400, { error: m.subdomain_taken() });
 
 		const [plan] = await db.select().from(plans).where(eq(plans.active, true)).limit(1);
-		if (!plan) return fail(500, { error: 'No plan available' });
+		if (!plan) return fail(500, { error: m.new_error_no_plan() });
 
 		// Pick the active node with the fewest servers
 		const activeNodes = await db.select().from(nodes).where(eq(nodes.status, 'active'));
-		if (activeNodes.length === 0) return fail(500, { error: 'No node available' });
+		if (activeNodes.length === 0) return fail(500, { error: m.new_error_no_nodes() });
 
 		const counts = await db
 			.select({ nodeId: servers.nodeId, total: sql<number>`count(*)::int` })
@@ -54,7 +55,7 @@ export const actions: Actions = {
 		const node = activeNodes
 			.filter((n) => (countByNode.get(n.id) ?? 0) < n.maxServers)
 			.sort((a, b) => (countByNode.get(a.id) ?? 0) - (countByNode.get(b.id) ?? 0))[0];
-		if (!node) return fail(503, { error: 'All nodes are full, please try again later' });
+		if (!node) return fail(503, { error: m.new_error_no_nodes() });
 
 		const serverType = type as 'survival' | 'creative' | 'hardcore' | 'flat';
 		const settings = defaultSettings(serverType);
