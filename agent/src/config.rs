@@ -30,8 +30,6 @@ impl ServerSettings {
         #[derive(Serialize)]
         struct Java {
             max_players: i64,
-            view_distance: i64,
-            simulation_distance: i64,
             motd: String,
         }
         #[derive(Serialize)]
@@ -64,8 +62,6 @@ impl ServerSettings {
             networking: Networking {
                 java: Java {
                     max_players: self.max_players,
-                    view_distance: 8,
-                    simulation_distance: 6,
                     motd: self.motd.clone(),
                 },
             },

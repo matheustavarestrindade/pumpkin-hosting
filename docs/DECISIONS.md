@@ -2,6 +2,25 @@
 
 Newest first. One entry per decision. Never delete entries; mark superseded.
 
+## D14 - No view-distance caps, 1GB / 2 cores per server
+
+- Status: accepted
+- We do not override view_distance or simulation_distance in pumpkin.toml;
+  Pumpkin (vanilla) defaults apply. Limiting vision hurt the feel of the game.
+- Plan "Friends": 1024 MB RAM, 2000 millicores (2 full cores) per container.
+  Chunk generation needs burst CPU; 0.5 core felt sluggish.
+- Recheck capacity planning: 32GB box now fits ~25 active servers by RAM.
+
+## D15 - Staying on Pumpkin despite WIP mob AI
+
+- Status: accepted
+- Known limitation: entity AI (mobs attacking players) is unfinished upstream
+  (Pumpkin issues #1406, #1404, 1.0 checklist #449). Mobs spawn but do not
+  really hunt or damage players yet.
+- We keep Pumpkin anyway (tiny RAM footprint = cheap hosting). Re-evaluate
+  at Pumpkin 1.0; the image is swappable per server if we ever need real
+  vanilla behavior (itzg/minecraft-server).
+
 ## D13 - Pumpkin whitelist lives at data/whitelist.json
 
 - Status: accepted
