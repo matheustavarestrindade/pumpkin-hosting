@@ -153,31 +153,31 @@
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-3">
-			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+			<label class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background p-3 transition-colors hover:bg-muted/50">
 				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
 					<ShieldIcon class="size-5" />
 				</span>
-				<div class="min-w-0 flex-1">
-					<p class="text-sm font-medium text-foreground">Friends Only</p>
-					<p class="text-xs text-muted-foreground">
+				<span class="min-w-0 flex-1">
+					<span class="block text-sm font-medium text-foreground">Friends Only</span>
+					<span class="block text-xs text-muted-foreground">
 						{allowlistEnabled ? 'On - only approved players can join' : 'Off - anyone can join'}
-					</p>
-				</div>
+					</span>
+				</span>
 				<Switch bind:checked={allowlistEnabled} aria-label="Friends only" />
-			</div>
+			</label>
 
-			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+			<label class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background p-3 transition-colors hover:bg-muted/50">
 				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
 					<SwordsIcon class="size-5" />
 				</span>
-				<div class="min-w-0 flex-1">
-					<p class="text-sm font-medium text-foreground">PvP</p>
-					<p class="text-xs text-muted-foreground">
+				<span class="min-w-0 flex-1">
+					<span class="block text-sm font-medium text-foreground">PvP</span>
+					<span class="block text-xs text-muted-foreground">
 						{pvp ? 'On - players can hurt each other' : 'Off - players cannot hurt each other'}
-					</p>
-				</div>
+					</span>
+				</span>
 				<Switch bind:checked={pvp} aria-label="PvP" />
-			</div>
+			</label>
 		</Card.Content>
 	</Card.Root>
 
