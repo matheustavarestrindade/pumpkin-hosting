@@ -14,10 +14,12 @@ Newest first. One entry per decision. Never delete entries; mark superseded.
 ## D15 - Staying on Pumpkin despite WIP mob AI
 
 - Status: accepted
-- Known limitation: entity AI (mobs attacking players) is unfinished upstream
-  (Pumpkin issues #1406, #1404, 1.0 checklist #449). Mobs spawn but do not
-  really hunt or damage players yet.
-- We keep Pumpkin anyway (tiny RAM footprint = cheap hosting). Re-evaluate
+- UPDATE (Aug 2026): mob AI tracking issue #1406 is CLOSED - goal system,
+  pathfinding, melee attack and target selectors landed in master. Servers on
+  older images must be recreated to pick it up (reconcile loop does this when
+  a container is removed; the volume keeps the world).
+- Known remaining gaps: some combat polish may still lag vanilla.
+- We keep Pumpkin (tiny RAM footprint = cheap hosting). Re-evaluate
   at Pumpkin 1.0; the image is swappable per server if we ever need real
   vanilla behavior (itzg/minecraft-server).
 
