@@ -2,6 +2,9 @@
 
 Status: [ ] todo, [~] in progress, [x] done
 
+**Current state: Phases 1-6 done and verified locally. Next: Phase 7 hardening,
+then real Coolify deploy.**
+
 ## Phase 1 - Scaffold
 
 - [x] Docs (README, ARCHITECTURE, DECISIONS, FLOWS, DATABASE, TODO, COOLIFY)

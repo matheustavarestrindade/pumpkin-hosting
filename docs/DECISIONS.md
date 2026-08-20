@@ -2,6 +2,35 @@
 
 Newest first. One entry per decision. Never delete entries; mark superseded.
 
+## D13 - Pumpkin whitelist lives at data/whitelist.json
+
+- Status: accepted
+- Found by inspection: Pumpkin creates `data/whitelist.json` (with ops.json,
+  banned-*.json). Uploading to the volume root is ignored.
+- The agent uploads a tar containing `data/` (dir entry) + `data/whitelist.json`.
+- UUIDs are resolved via the Mojang API by the agent at write time.
+
+## D12 - Stripe: R$10/month BRL, dev-mode bypass
+
+- Status: accepted
+- One plan "Friends" backed by the Stripe product "Teste" (R$10/month, test mode).
+- If STRIPE_SECRET_KEY / STRIPE_PRICE_ID are missing, the panel runs in dev mode:
+  servers activate instantly with no checkout. Lets us develop without Stripe.
+- Invalid stored customer ids self-heal (verify with retrieve, recreate by email).
+- Cancel flow: subscription.deleted -> suspended + deletion_scheduled_at = +7 days;
+  the agent reconcile sweep deletes container + volume + row after the grace period.
+
+## D11 - shadcn-svelte as the UI system
+
+- Status: accepted
+- Custom one-off components did not look professional enough.
+- shadcn-svelte (bits-ui) with the dark zinc theme, green as primary, no gradients.
+- Dashboard shell = sidebar (collapsible) + breadcrumb header.
+- Custom components (ServerCard, TypeSelectCard, FriendsEditor, StatusDot) stay
+  custom but built on shadcn primitives and tokens.
+- Friends list UX: chip editor with Mojang validation and mc-heads.net avatars,
+  not a raw textarea.
+
 ## D10 - mc-router instead of Infrared (supersedes D2)
 
 - Status: accepted

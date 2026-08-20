@@ -1,6 +1,8 @@
 # Database schema (Postgres + Drizzle)
 
-better-auth owns: `user`, `session`, `account`, `verification`. We do not touch them.
+better-auth owns: `user`, `session`, `account`, `verification`.
+We added ONE extra column to `user`: `stripe_customer_id` text null.
+Note: better-auth 1.7 requires an `issuer` column on `account` (nullable).
 Our tables:
 
 ## plans
@@ -23,7 +25,7 @@ Our tables:
 |---|---|---|
 | id | uuid pk | |
 | name | text | |
-| api_url | text | internal, e.g. http://agent:3000 |
+| api_url | text | internal, e.g. http://agent:3001 |
 | api_token | text | shared secret for agent auth |
 | max_servers | int | capacity cap |
 | status | enum | active / draining / offline |
@@ -45,7 +47,7 @@ Our tables:
 | container_id | text null | set by agent |
 | volume_name | text | `world-<id>` |
 | status | enum | provisioning / stopped / starting / running / stopping / error / suspended |
-| settings | jsonb | `{ difficulty, pvp, max_players, gamemode, motd, allowlist: string[] }` |
+| settings | jsonb | ServerSettings, see below |
 | stripe_subscription_id | text null | |
 | last_activity_at | timestamptz | for auto-sleep |
 | deletion_scheduled_at | timestamptz null | 7-day grace |
@@ -73,11 +75,26 @@ Indexes: servers(user_id), servers(node_id), servers(status).
 | meta | jsonb |
 | created_at | timestamptz |
 
+## ServerSettings (servers.settings jsonb)
+
+```ts
+{
+  difficulty: 'peaceful' | 'easy' | 'normal' | 'hard',
+  pvp: boolean,
+  maxPlayers: number,          // camelCase (matches Rust serde camelCase)
+  gamemode: 'survival' | 'creative',
+  motd: string,
+  allowlistEnabled: boolean,
+  allowlist: string[],          // MC usernames
+  hardcore: boolean
+}
+```
+
 ## Default settings per type
 
-| type | difficulty | gamemode | pvp |
-|---|---|---|---|
-| survival | normal | survival | on |
-| creative | peaceful | creative | off |
-| hardcore | hard | survival | on |
-| flat | peaceful | creative | off |
+| type | difficulty | gamemode | pvp | hardcore |
+|---|---|---|---|---|
+| survival | normal | survival | on | off |
+| creative | peaceful | creative | off | off |
+| hardcore | hard | survival | on | on |
+| flat | peaceful | creative | off | off |
