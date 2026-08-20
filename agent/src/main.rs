@@ -40,6 +40,20 @@ async fn main() {
         }
     });
 
+    // Unpaid server sweep: every 5 minutes, drop provisioning rows older than 30min.
+    let sweep_state = state.clone();
+    tokio::spawn(async move {
+        let mut tick = interval(Duration::from_secs(300));
+        loop {
+            tick.tick().await;
+            match db::sweep_unpaid(&sweep_state.db, sweep_state.cfg.node_id).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(%n, "swept unpaid provisioning servers"),
+                Err(e) => tracing::error!(%e, "unpaid sweep failed"),
+            }
+        }
+    });
+
     let app = routes::router(state);
     let addr = std::env::var("AGENT_BIND").unwrap_or_else(|_| "0.0.0.0:3001".to_string());
     let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind");

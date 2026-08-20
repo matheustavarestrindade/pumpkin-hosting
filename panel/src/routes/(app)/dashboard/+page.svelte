@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import ServerCard from '$lib/components/server/ServerCard.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import type { PageProps } from './$types';
 
@@ -22,12 +23,9 @@
 			<p class="mt-2 max-w-sm text-sm text-muted-foreground">
 				Pick a name, choose a game type, and you are playing with your friends in under a minute.
 			</p>
-			<a
-				href="/servers/new"
-				class="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-			>
+			<Button class="mt-6" href="/servers/new">
 				<PlusIcon class="size-4" /> Create a server
-			</a>
+			</Button>
 		</div>
 	{:else}
 		<div class="mt-6 grid gap-3 xl:grid-cols-2">

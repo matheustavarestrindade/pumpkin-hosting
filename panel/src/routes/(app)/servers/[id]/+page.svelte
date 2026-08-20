@@ -52,19 +52,29 @@
 	let deleteOpen = $state(false);
 	let deleteConfirm = $state('');
 
-	// --- editable state (dirty -> floating apply bar) ---
+	// --- editable state (diff from snapshot -> floating apply bar) ---
 	let gamemode = $state(untrack(() => data.server.settings.gamemode));
 	let difficulty = $state(untrack(() => data.server.settings.difficulty));
 	let motd = $state(untrack(() => data.server.settings.motd));
 	let pvp = $state(untrack(() => data.server.settings.pvp));
 	let allowlistEnabled = $state(untrack(() => data.server.settings.allowlistEnabled));
 	let friends = $state(untrack(() => [...data.server.settings.allowlist]));
-	let dirty = $state(false);
 	let applying = $state(false);
+	let appliedFlash = $state(false);
 
-	function touch() {
-		dirty = true;
-	}
+	const snapshot = $derived(
+		JSON.stringify({
+			gamemode: data.server.settings.gamemode,
+			difficulty: data.server.settings.difficulty,
+			motd: data.server.settings.motd,
+			pvp: data.server.settings.pvp,
+			allowlistEnabled: data.server.settings.allowlistEnabled,
+			friends: data.server.settings.allowlist
+		})
+	);
+	const dirty = $derived(
+		JSON.stringify({ gamemode, difficulty, motd, pvp, allowlistEnabled, friends }) !== snapshot
+	);
 
 	function discard() {
 		gamemode = data.server.settings.gamemode;
@@ -73,13 +83,12 @@
 		pvp = data.server.settings.pvp;
 		allowlistEnabled = data.server.settings.allowlistEnabled;
 		friends = [...data.server.settings.allowlist];
-		dirty = false;
 	}
 
 	const statusLabel: Record<string, string> = {
 		running: 'Online',
 		stopped: 'Offline',
-		provisioning: 'Starting',
+		provisioning: 'Waiting payment',
 		starting: 'Starting',
 		stopping: 'Stopping',
 		error: 'Error',
@@ -121,15 +130,15 @@
 		</div>
 		<form method="POST" action="?/power" use:enhance>
 			{#if stopped}
-				<Button type="submit" name="action" value="start" class="rounded-xl">
+				<Button type="submit" name="action" value="start">
 					<PowerIcon /> Start
 				</Button>
 			{:else if running}
-				<Button type="submit" name="action" value="stop" variant="secondary" class="rounded-xl">
+				<Button type="submit" name="action" value="stop" variant="secondary">
 					<PowerIcon /> Stop
 				</Button>
 			{:else}
-				<Button disabled class="rounded-xl">
+				<Button disabled>
 					<PowerIcon /> Working...
 				</Button>
 			{/if}
@@ -137,7 +146,7 @@
 	</div>
 
 	<!-- core controls -->
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
 				<PowerIcon class="size-4 text-muted-foreground" /> Core Controls
@@ -150,16 +159,11 @@
 				</span>
 				<div class="min-w-0 flex-1">
 					<p class="text-sm font-medium text-foreground">Friends Only</p>
-					<p class="text-xs text-muted-foreground">Only approved players can join</p>
+					<p class="text-xs text-muted-foreground">
+						{allowlistEnabled ? 'On - only approved players can join' : 'Off - anyone can join'}
+					</p>
 				</div>
-				<Switch
-					checked={allowlistEnabled}
-					aria-label="Friends only"
-					onCheckedChange={(v) => {
-						allowlistEnabled = v;
-						touch();
-					}}
-				/>
+				<Switch bind:checked={allowlistEnabled} aria-label="Friends only" />
 			</div>
 
 			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
@@ -168,22 +172,17 @@
 				</span>
 				<div class="min-w-0 flex-1">
 					<p class="text-sm font-medium text-foreground">PvP</p>
-					<p class="text-xs text-muted-foreground">Players can hurt each other</p>
+					<p class="text-xs text-muted-foreground">
+						{pvp ? 'On - players can hurt each other' : 'Off - players cannot hurt each other'}
+					</p>
 				</div>
-				<Switch
-					checked={pvp}
-					aria-label="PvP"
-					onCheckedChange={(v) => {
-						pvp = v;
-						touch();
-					}}
-				/>
+				<Switch bind:checked={pvp} aria-label="PvP" />
 			</div>
 		</Card.Content>
 	</Card.Root>
 
 	<!-- gameplay -->
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
 				<Gamepad2Icon class="size-4 text-muted-foreground" /> Gameplay
@@ -192,8 +191,8 @@
 		<Card.Content class="flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Game mode</Label>
-				<Select.Root type="single" bind:value={gamemode} onValueChange={touch}>
-					<Select.Trigger class="h-11 w-full rounded-xl bg-input capitalize">{gamemode}</Select.Trigger>
+				<Select.Root type="single" bind:value={gamemode}>
+					<Select.Trigger class="capitalize">{gamemode}</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="survival" class="capitalize">Survival</Select.Item>
 						<Select.Item value="creative" class="capitalize">Creative</Select.Item>
@@ -203,8 +202,8 @@
 
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Difficulty</Label>
-				<Select.Root type="single" bind:value={difficulty} onValueChange={touch}>
-					<Select.Trigger class="h-11 w-full rounded-xl bg-input capitalize">{difficulty}</Select.Trigger>
+				<Select.Root type="single" bind:value={difficulty}>
+					<Select.Trigger class="capitalize">{difficulty}</Select.Trigger>
 					<Select.Content>
 						{#each ['peaceful', 'easy', 'normal', 'hard'] as d (d)}
 							<Select.Item value={d} class="capitalize">{d}</Select.Item>
@@ -221,15 +220,13 @@
 					id="motd"
 					bind:value={motd}
 					maxlength={64}
-					class="h-11 rounded-xl bg-input"
-					oninput={touch}
 				/>
 			</div>
 		</Card.Content>
 	</Card.Root>
 
 	<!-- players -->
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
 				<UserPlusIcon class="size-4 text-muted-foreground" /> Players
@@ -237,12 +234,12 @@
 			<Card.Description>Instantly grant access to a trusted friend.</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<FriendsEditor bind:friends onchange={touch} />
+			<FriendsEditor bind:friends />
 		</Card.Content>
 	</Card.Root>
 
 	<!-- world -->
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
 				<DownloadIcon class="size-4 text-muted-foreground" /> World
@@ -250,14 +247,14 @@
 			<Card.Description>Download a full copy of your world as a zip, even while stopped.</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<Button variant="secondary" href="/servers/{data.server.id}/world.zip" class="rounded-xl">
+			<Button variant="secondary" href="/servers/{data.server.id}/world.zip">
 				<DownloadIcon /> Download world
 			</Button>
 		</Card.Content>
 	</Card.Root>
 
 	<!-- billing -->
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="text-base">Billing</Card.Title>
 		</Card.Header>
@@ -285,12 +282,12 @@
 			<div class="mt-4 flex flex-wrap gap-2">
 				{#if data.billing.enabled && data.server.stripeSubscriptionId && data.billing.hasCustomer}
 					<form method="POST" action="?/portal">
-						<Button type="submit" variant="secondary" class="rounded-xl">Manage billing</Button>
+						<Button type="submit" variant="secondary">Manage billing</Button>
 					</form>
 				{/if}
 				{#if data.billing.enabled && !data.server.stripeSubscriptionId}
 					<form method="POST" action="?/payNow">
-						<Button type="submit" class="rounded-xl">
+						<Button type="submit">
 							{data.server.status === 'suspended' ? 'Reactivate subscription' : 'Complete payment'}
 						</Button>
 					</form>
@@ -313,7 +310,7 @@
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<Button variant="destructive" class="rounded-xl" onclick={() => (deleteOpen = true)}>Delete server</Button>
+			<Button variant="destructive" onclick={() => (deleteOpen = true)}>Delete server</Button>
 		</Card.Content>
 	</Card.Root>
 </div>
@@ -328,7 +325,8 @@
 				applying = true;
 				return async ({ update }) => {
 					applying = false;
-					dirty = false;
+					appliedFlash = true;
+					setTimeout(() => (appliedFlash = false), 4000);
 					await update();
 				};
 			}}
@@ -353,6 +351,18 @@
 				</Button>
 			</div>
 		</form>
+	</div>
+{/if}
+
+<!-- applied feedback -->
+{#if appliedFlash && !dirty}
+	<div class="fixed inset-x-4 bottom-20 z-50 mx-auto max-w-2xl md:bottom-6">
+		<div class="flex items-center gap-3 rounded-2xl border border-primary/40 bg-card p-3 shadow-lg">
+			<CheckIcon class="size-5 shrink-0 text-primary" />
+			<p class="flex-1 text-sm text-foreground">
+				Changes applied{running ? ' - the server is restarting.' : '.'}
+			</p>
+		</div>
 	</div>
 {/if}
 

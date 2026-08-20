@@ -93,7 +93,6 @@
 					placeholder="e.g. The Overworld"
 					maxlength={32}
 					required
-					class="h-12 rounded-xl bg-input"
 				/>
 			</div>
 			{#if subdomain}
@@ -134,8 +133,7 @@
 		<div class="sticky bottom-20 md:bottom-6">
 			<Button
 				type="submit"
-				size="lg"
-				class="h-13 w-full rounded-xl text-base shadow-lg"
+				size="lg" class="w-full"
 				disabled={!availability?.available || submitting}
 			>
 				<RocketIcon /> {submitting ? 'Launching...' : `Launch Server · ${price}/month`}

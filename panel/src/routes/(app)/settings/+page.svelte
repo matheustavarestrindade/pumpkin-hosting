@@ -50,7 +50,7 @@
 <div class="mx-auto flex max-w-2xl flex-col gap-5">
 	<h1 class="text-2xl font-bold text-foreground">Profile</h1>
 
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2 text-base">
 				<UserIcon class="size-4 text-muted-foreground" /> Account
@@ -67,7 +67,7 @@
 		</Card.Content>
 	</Card.Root>
 
-	<Card.Root class="rounded-2xl shadow-sm">
+	<Card.Root>
 		<Card.Header>
 			<Card.Title class="text-base">Change password</Card.Title>
 		</Card.Header>
@@ -81,7 +81,6 @@
 						bind:value={currentPassword}
 						required
 						autocomplete="current-password"
-						class="h-11 rounded-xl bg-input"
 					/>
 				</div>
 				<div class="flex flex-col gap-2">
@@ -93,7 +92,6 @@
 						required
 						minlength={8}
 						autocomplete="new-password"
-						class="h-11 rounded-xl bg-input"
 					/>
 				</div>
 				{#if error}
@@ -103,10 +101,10 @@
 					<p class="text-sm font-medium text-primary">{message}</p>
 				{/if}
 				<div class="flex gap-2">
-					<Button type="submit" class="rounded-xl" disabled={loading}>
+					<Button type="submit" disabled={loading}>
 						{loading ? 'Saving...' : 'Change password'}
 					</Button>
-					<Button type="button" variant="secondary" class="rounded-xl" onclick={logout}>
+					<Button type="button" variant="secondary" onclick={logout}>
 						<LogOutIcon /> Log out
 					</Button>
 				</div>

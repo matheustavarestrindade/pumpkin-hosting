@@ -28,7 +28,7 @@
 	const statusLabel: Record<string, string> = {
 		running: 'Online',
 		stopped: 'Offline',
-		provisioning: 'Starting',
+		provisioning: 'Waiting payment',
 		starting: 'Starting',
 		stopping: 'Stopping',
 		error: 'Error',

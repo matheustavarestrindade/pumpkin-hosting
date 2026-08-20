@@ -57,7 +57,6 @@
 			placeholder="Minecraft username"
 			bind:value={input}
 			maxlength={16}
-			class="h-11 rounded-xl bg-input"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					e.preventDefault();

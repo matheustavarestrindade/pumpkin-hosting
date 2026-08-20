@@ -65,3 +65,16 @@ pub async fn delete_server_row(pool: &PgPool, id: uuid::Uuid) {
         .execute(pool)
         .await;
 }
+
+/// Deletes servers stuck in `provisioning` (payment never completed) for over
+/// 30 minutes. These have no container, so a row delete is the whole cleanup.
+pub async fn sweep_unpaid(pool: &PgPool, node_id: uuid::Uuid) -> Result<u64, sqlx::Error> {
+    let res = sqlx::query(
+        "delete from servers where node_id = $1 and status = 'provisioning'
+         and stripe_subscription_id is null and created_at < now() - interval '30 minutes'",
+    )
+    .bind(node_id)
+    .execute(pool)
+    .await?;
+    Ok(res.rows_affected())
+}
