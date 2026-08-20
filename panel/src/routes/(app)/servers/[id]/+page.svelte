@@ -16,6 +16,7 @@
 	import FlameIcon from '@lucide/svelte/icons/flame';
 	import Gamepad2Icon from '@lucide/svelte/icons/gamepad-2';
 	import LayersIcon from '@lucide/svelte/icons/layers';
+	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 	import PowerIcon from '@lucide/svelte/icons/power';
 	import ShieldIcon from '@lucide/svelte/icons/shield';
 	import SwordsIcon from '@lucide/svelte/icons/swords';
@@ -50,6 +51,7 @@
 
 	let deleteOpen = $state(false);
 	let deleteConfirm = $state('');
+	let powerBusy = $state(false);
 
 	// --- editable state (diff from snapshot -> floating apply bar) ---
 	let gamemode = $state(untrack(() => data.server.settings.gamemode));
@@ -127,21 +129,6 @@
 				{#if copied}<CheckIcon class="size-3.5" />{:else}<CopyIcon class="size-3.5" />{/if}
 			</button>
 		</div>
-		<form method="POST" action="?/power" use:enhance>
-			{#if stopped}
-				<Button type="submit" name="action" value="start">
-					<PowerIcon /> Start
-				</Button>
-			{:else if running}
-				<Button type="submit" name="action" value="stop" variant="secondary">
-					<PowerIcon /> Stop
-				</Button>
-			{:else}
-				<Button disabled>
-					<PowerIcon /> Working...
-				</Button>
-			{/if}
-		</form>
 	</div>
 
 	<!-- core controls -->
@@ -152,6 +139,43 @@
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-3">
+			<div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg {running ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}">
+					<PowerIcon class="size-5" />
+				</span>
+				<div class="min-w-0 flex-1">
+					<p class="text-sm font-medium text-foreground">Server Status</p>
+					<p class="text-xs text-muted-foreground">
+						{running ? 'Online - players can join' : busy ? 'Changing state...' : 'Offline - players cannot join'}
+					</p>
+				</div>
+				<form
+					method="POST"
+					action="?/power"
+					use:enhance={() => {
+						powerBusy = true;
+						return async ({ update }) => {
+							powerBusy = false;
+							await update();
+						};
+					}}
+				>
+					{#if stopped}
+						<Button type="submit" name="action" value="start" size="sm" disabled={powerBusy}>
+							{#if powerBusy}<LoaderCircleIcon class="animate-spin" /> Starting...{:else}Start{/if}
+						</Button>
+					{:else if running}
+						<Button type="submit" name="action" value="stop" variant="secondary" size="sm" disabled={powerBusy}>
+							{#if powerBusy}<LoaderCircleIcon class="animate-spin" /> Stopping...{:else}Stop{/if}
+						</Button>
+					{:else}
+						<Button size="sm" disabled>
+							<LoaderCircleIcon class="animate-spin" /> {statusLabel[data.server.status] ?? 'Working'}...
+						</Button>
+					{/if}
+				</form>
+			</div>
+
 			<button
 				type="button"
 				onclick={() => (allowlistEnabled = !allowlistEnabled)}
