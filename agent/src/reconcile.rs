@@ -50,27 +50,26 @@ async fn run_inner(state: &Arc<AppState>) -> Result<(), String> {
     for row in &rows {
         match row.status.as_str() {
             "running" | "starting" => {
+                // Only recreate when the container is truly gone. A stopped
+                // container (asleep after idle, or crashed) wakes automatically
+                // on the next join via mc-router auto-scale-up - the router is
+                // our recovery mechanism.
                 if !container_ids.contains(&row.id) {
                     tracing::info!(%row.id, "container missing, recreating from volume");
                     if let Err(e) = routes::recreate_from_row(state, row).await {
                         tracing::error!(%row.id, err = %e.1, "recreate failed");
                     }
-                } else {
-                    match docker::is_running(&state.docker, row.id).await {
-                        Some(false) => {
-                            tracing::info!(%row.id, "container stopped but should run, starting");
-                            let _ = docker::start(&state.docker, row.id).await;
-                        }
-                        None => {
-                            if let Err(e) = routes::recreate_from_row(state, row).await {
-                                tracing::error!(%row.id, err = %e.1, "recreate failed");
-                            }
-                        }
-                        _ => {}
-                    }
                 }
             }
             "stopped" | "suspended" | "error" => {
+                // User intent: server must stay off and unreachable. Remove the
+                // route so no join attempt can wake it (auto-scale-up).
+                crate::router::route_delete(
+                    &state.http,
+                    &state.cfg.router_api,
+                    &format!("{}.{}", row.subdomain, state.cfg.base_domain),
+                )
+                .await;
                 if container_ids.contains(&row.id)
                     && docker::is_running(&state.docker, row.id).await == Some(true)
                 {

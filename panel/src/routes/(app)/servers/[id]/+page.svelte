@@ -45,10 +45,6 @@
 		setTimeout(() => (copied = false), 1500);
 	}
 
-	const running = $derived(data.server.status === 'running');
-	const busy = $derived(['provisioning', 'starting', 'stopping'].includes(data.server.status));
-	const stopped = $derived(data.server.status === 'stopped' || data.server.status === 'error');
-
 	let deleteOpen = $state(false);
 	let deleteConfirm = $state('');
 	let powerBusy = $state(false);
@@ -88,6 +84,7 @@
 
 	const statusLabel: Record<string, string> = {
 		running: 'Online',
+		sleeping: 'Sleeping',
 		stopped: 'Offline',
 		provisioning: 'Waiting payment',
 		starting: 'Starting',
@@ -97,6 +94,7 @@
 	};
 	const statusClass: Record<string, string> = {
 		running: 'bg-primary/15 text-primary border-transparent',
+		sleeping: 'bg-sky-500/15 text-sky-700 border-transparent',
 		stopped: 'bg-muted text-muted-foreground border-transparent',
 		provisioning: 'bg-amber-500/15 text-amber-700 border-transparent',
 		starting: 'bg-amber-500/15 text-amber-700 border-transparent',
@@ -104,6 +102,17 @@
 		error: 'bg-destructive/15 text-destructive border-transparent',
 		suspended: 'bg-destructive/15 text-destructive border-transparent'
 	};
+
+	// DB says running but the container is stopped = auto-sleeping.
+	const displayStatus = $derived(
+		data.server.status === 'running' && data.containerStatus === 'stopped'
+			? 'sleeping'
+			: data.server.status
+	);
+	const running = $derived(data.server.status === 'running');
+	const sleeping = $derived(displayStatus === 'sleeping');
+	const busy = $derived(['provisioning', 'starting', 'stopping'].includes(data.server.status));
+	const stopped = $derived(data.server.status === 'stopped' || data.server.status === 'error');
 </script>
 
 <svelte:head>
@@ -119,7 +128,7 @@
 		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2">
 				<h1 class="truncate text-xl font-bold text-foreground">{data.server.name}</h1>
-				<Badge class={statusClass[data.server.status]}>{statusLabel[data.server.status] ?? data.server.status}</Badge>
+				<Badge class={statusClass[displayStatus]}>{statusLabel[displayStatus] ?? displayStatus}</Badge>
 			</div>
 			<button
 				onclick={copyAddress}
@@ -155,21 +164,27 @@
 					name="action"
 					value={running ? 'stop' : 'start'}
 					disabled={busy || powerBusy}
-					class="relative flex w-full items-center gap-3 rounded-xl border p-3 pr-16 text-left transition-colors disabled:cursor-wait {running
-						? 'border-primary/40 bg-primary/10'
-						: 'border-destructive/40 bg-destructive/10'}"
+					class="relative flex w-full items-center gap-3 rounded-xl border p-3 pr-16 text-left transition-colors disabled:cursor-wait {sleeping
+						? 'border-sky-500/40 bg-sky-500/10'
+						: running
+							? 'border-primary/40 bg-primary/10'
+							: 'border-destructive/40 bg-destructive/10'}"
 				>
 					<Badge
-						class="absolute top-3 right-3 border-transparent {running
-							? 'bg-primary text-primary-foreground'
-							: 'bg-destructive text-destructive-foreground'}"
+						class="absolute top-3 right-3 border-transparent {sleeping
+							? 'bg-sky-500 text-white'
+							: running
+								? 'bg-primary text-primary-foreground'
+								: 'bg-destructive text-destructive-foreground'}"
 					>
-						{running ? 'Online' : 'Offline'}
+						{statusLabel[displayStatus] ?? displayStatus}
 					</Badge>
 					<span
-						class="flex size-10 shrink-0 items-center justify-center rounded-lg {running
-							? 'bg-primary/15 text-primary'
-							: 'bg-destructive/15 text-destructive'}"
+						class="flex size-10 shrink-0 items-center justify-center rounded-lg {sleeping
+							? 'bg-sky-500/15 text-sky-700'
+							: running
+								? 'bg-primary/15 text-primary'
+								: 'bg-destructive/15 text-destructive'}"
 					>
 						{#if busy || powerBusy}
 							<LoaderCircleIcon class="size-5 animate-spin" />
@@ -183,7 +198,9 @@
 							{#if powerBusy}
 								{running ? 'Stopping...' : 'Starting...'}
 							{:else if busy}
-								{statusLabel[data.server.status]}...
+								{statusLabel[displayStatus]}...
+							{:else if sleeping}
+								Asleep - wakes automatically when a player joins. Click to stop.
 							{:else if running}
 								Players can join - click to stop
 							{:else}

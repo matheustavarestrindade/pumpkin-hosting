@@ -6,6 +6,7 @@ pub struct AgentConfig {
     pub node_id: uuid::Uuid,
     pub network: String,
     pub base_domain: String,
+    pub router_api: String,
 }
 
 impl AgentConfig {
@@ -19,6 +20,8 @@ impl AgentConfig {
                 .expect("NODE_ID must be a uuid"),
             network: std::env::var("MC_NETWORK").unwrap_or_else(|_| "mc-net".to_string()),
             base_domain: std::env::var("BASE_DOMAIN").expect("BASE_DOMAIN is required"),
+            router_api: std::env::var("ROUTER_API")
+                .unwrap_or_else(|_| "http://router:25566".to_string()),
         }
     }
 }

@@ -322,11 +322,18 @@ fn tar_to_zip(tar_bytes: &[u8]) -> Result<Vec<u8>, String> {
     Ok(cursor.into_inner())
 }
 
-pub async fn is_running(docker: &bollard::Docker, server_id: uuid::Uuid) -> Option<bool> {    let info = docker
+pub async fn is_running(docker: &bollard::Docker, server_id: uuid::Uuid) -> Option<bool> {
+    inspect_state(docker, server_id).await.map(|(running, _)| running)
+}
+
+/// Some((running, exit_code)) if the container exists.
+pub async fn inspect_state(docker: &bollard::Docker, server_id: uuid::Uuid) -> Option<(bool, i64)> {
+    let info = docker
         .inspect_container(&container_name(server_id), None::<InspectContainerOptions>)
         .await
         .ok()?;
-    Some(info.state?.running?)
+    let state = info.state?;
+    Some((state.running?, state.exit_code?))
 }
 
 pub struct ManagedContainer {

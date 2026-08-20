@@ -3,6 +3,7 @@ mod config;
 mod db;
 mod docker;
 mod reconcile;
+mod router;
 mod routes;
 mod state;
 

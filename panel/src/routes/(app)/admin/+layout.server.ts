@@ -1,15 +1,17 @@
 import { db } from '$lib/server/db';
 import { user as userTable } from '$lib/server/db/schema';
+import { requireUser } from '$lib/server/guard';
 import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-	if (!locals.user) redirect(303, '/login');
+	const user = requireUser(locals);
 	const [row] = await db
 		.select({ isAdmin: userTable.isAdmin })
 		.from(userTable)
-		.where(eq(userTable.id, locals.user.id))
+		.where(eq(userTable.id, user.id))
 		.limit(1);
-	return { user: locals.user, isAdmin: row?.isAdmin ?? false };
+	if (!row?.isAdmin) redirect(303, '/dashboard');
+	return {};
 };

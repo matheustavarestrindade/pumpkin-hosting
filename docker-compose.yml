@@ -50,11 +50,18 @@ services:
     image: itzg/mc-router:latest
     restart: unless-stopped
     user: root
-    command: ['--in-docker']
+    command:
+      - '--in-docker'
+      - '--auto-scale-up'
+      - '--auto-scale-down'
+      - '--auto-scale-down-after=10m'
+      - '--auto-scale-asleep-motd=Server is sleeping - connect to wake it up'
+      - '--auto-scale-loading-motd=Server is waking up, try again in a few seconds'
+      - '--api-binding=0.0.0.0:25566'
     ports:
       - '25565:25565'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - default
       - mc-net

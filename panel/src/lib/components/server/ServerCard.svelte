@@ -12,7 +12,7 @@
 	type Server = typeof servers.$inferSelect;
 
 	type Props = {
-		server: Server;
+		server: Server & { containerStatus?: string | null };
 		address: string;
 	};
 
@@ -27,6 +27,7 @@
 
 	const statusLabel: Record<string, string> = {
 		running: 'Online',
+		sleeping: 'Sleeping',
 		stopped: 'Offline',
 		provisioning: 'Waiting payment',
 		starting: 'Starting',
@@ -37,6 +38,7 @@
 
 	const statusClass: Record<string, string> = {
 		running: 'bg-primary/15 text-primary border-transparent',
+		sleeping: 'bg-sky-500/15 text-sky-700 border-transparent',
 		stopped: 'bg-muted text-muted-foreground border-transparent',
 		provisioning: 'bg-amber-500/15 text-amber-700 border-transparent',
 		starting: 'bg-amber-500/15 text-amber-700 border-transparent',
@@ -44,6 +46,10 @@
 		error: 'bg-destructive/15 text-destructive border-transparent',
 		suspended: 'bg-destructive/15 text-destructive border-transparent'
 	};
+
+	const displayStatus = $derived(
+		server.status === 'running' && server.containerStatus === 'stopped' ? 'sleeping' : server.status
+	);
 
 	const Icon = $derived(typeIcon[server.type] ?? SwordsIcon);
 </script>
@@ -62,8 +68,8 @@
 			<span class="capitalize">{server.type}</span> · {address}
 		</span>
 		<span class="mt-1.5 inline-flex">
-			<Badge class={cn('px-2 py-0.5 text-xs', statusClass[server.status])}>
-				{statusLabel[server.status] ?? server.status}
+			<Badge class={cn('px-2 py-0.5 text-xs', statusClass[displayStatus])}>
+				{statusLabel[displayStatus] ?? displayStatus}
 			</Badge>
 		</span>
 	</span>

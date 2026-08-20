@@ -2,6 +2,22 @@
 
 Newest first. One entry per decision. Never delete entries; mark superseded.
 
+## D16 - Auto-sleep via mc-router auto-scale
+
+- Status: accepted
+- mc-router runs with `-auto-scale-up -auto-scale-down -auto-scale-down-after=10m`
+  and the REST API (`-api-binding`, internal only).
+- Idle server (no connections for 10m) -> router stops the container. Login
+  attempt -> router starts it (status pings get the asleep MOTD, no wake).
+- User-stopped servers must NOT wake on join: the agent deletes the mc-router
+  route on stop/suspend/delete and reconcile keeps it deleted. Start re-adds it
+  (explicit POST /routes plus Docker discovery on the start event).
+- Reconcile rule changed: "DB running + container stopped" is a LEGAL state
+  (asleep). Never restart it; only recreate when the container is missing.
+  Crash recovery happens through the router on the next join.
+- Router needs rw access to the Docker socket for start/stop (was ro).
+- Panel shows "Sleeping" when DB says running but the container is stopped.
+
 ## D14 - No view-distance caps, 1GB / 2 cores per server
 
 - Status: accepted

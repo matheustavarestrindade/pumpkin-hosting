@@ -8,19 +8,22 @@
 	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import ShieldIcon from '@lucide/svelte/icons/shield';
 	import UserIcon from '@lucide/svelte/icons/user';
 
 	type Props = {
 		user: { email: string; name: string };
+		isAdmin?: boolean;
 	};
 
-	let { user }: Props = $props();
+	let { user, isAdmin = false }: Props = $props();
 
-	const items = [
+	const items = $derived([
 		{ title: 'Servers', href: '/dashboard', icon: LayoutGridIcon },
 		{ title: 'New server', href: '/servers/new', icon: PlusIcon },
-		{ title: 'Profile', href: '/settings', icon: UserIcon }
-	];
+		{ title: 'Profile', href: '/settings', icon: UserIcon },
+		...(isAdmin ? [{ title: 'Admin', href: '/admin', icon: ShieldIcon }] : [])
+	]);
 
 	async function logout() {
 		await authClient.signOut();

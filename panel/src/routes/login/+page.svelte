@@ -41,7 +41,10 @@
 					<Input id="email" type="email" bind:value={email} required autocomplete="email" />
 				</div>
 				<div class="flex flex-col gap-2">
-					<Label for="password">Password</Label>
+					<div class="flex items-center justify-between">
+						<Label for="password">Password</Label>
+						<a href="/forgot-password" class="text-xs text-primary hover:underline">Forgot password?</a>
+					</div>
 					<Input
 						id="password"
 						type="password"

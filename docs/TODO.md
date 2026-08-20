@@ -2,8 +2,7 @@
 
 Status: [ ] todo, [~] in progress, [x] done
 
-**Current state: Phases 1-6 done and verified locally. Next: Phase 7 hardening,
-then real Coolify deploy.**
+**Current state: Phases 1-7 done and verified locally. Next: real Coolify deploy.**
 
 ## Phase 1 - Scaffold
 
@@ -59,9 +58,16 @@ then real Coolify deploy.**
 
 ## Phase 7 - Hardening
 
-- [ ] Sweep stale `provisioning` rows (payment never completed, older than 24h)
-- [ ] Auto-sleep (F10)
-- [ ] Admin page (F12)
+- [x] Sweep stale `provisioning` rows (agent sweep every 5 min, deletes unpaid
+      provisioning rows older than 30 min)
+- [x] Auto-sleep (F10): mc-router auto-scale-down after 10m idle + auto-scale-up
+      on login attempt. User-stopped servers get their route deleted so joins
+      cannot wake them. Reconcile treats "DB running + container stopped" as
+      asleep and never restarts it. Panel shows "Sleeping" status.
+- [x] Admin page (F12): stats, node health, servers + users tables.
+      Grant admin via SQL: update "user" set is_admin=true where email='...'
+- [x] Password reset (F2): forgot/reset pages + Resend (RESEND_API_KEY) with
+      dev-mode console log fallback. Full cycle verified.
 - [ ] Load test with bot clients on real hardware; set final plan limits
 - [ ] Reserved subdomain list finalized
 - [ ] Backups job (world volumes -> S3)

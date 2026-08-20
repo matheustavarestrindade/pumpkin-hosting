@@ -77,9 +77,21 @@ async fn start_server(
     if docker::is_running(&state.docker, id).await.is_none() {
         let row = crate::db::get_server(&state.db, id).await.map_err(internal)?;
         recreate_from_row(&state, &row).await?;
-        return Ok(StatusCode::OK);
+    } else {
+        docker::start(&state.docker, id).await.map_err(internal)?;
     }
-    docker::start(&state.docker, id).await.map_err(internal)?;
+
+    // Re-add the route explicitly in case it was removed when the user stopped
+    // the server (discovery would also re-add it on the start event).
+    if let Ok(row) = crate::db::get_server(&state.db, id).await {
+        crate::router::route_add(
+            &state.http,
+            &state.cfg.router_api,
+            &format!("{}.{}", row.subdomain, state.cfg.base_domain),
+            &format!("{}:25565", docker::container_name(id)),
+        )
+        .await;
+    }
     Ok(StatusCode::OK)
 }
 
@@ -87,6 +99,15 @@ async fn stop_server(
     State(state): State<Arc<AppState>>,
     Path(id): Path<uuid::Uuid>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    // Delete the route first so no join can wake the server while it stops.
+    if let Ok(row) = crate::db::get_server(&state.db, id).await {
+        crate::router::route_delete(
+            &state.http,
+            &state.cfg.router_api,
+            &format!("{}.{}", row.subdomain, state.cfg.base_domain),
+        )
+        .await;
+    }
     docker::stop(&state.docker, id).await.map_err(internal)?;
     Ok(StatusCode::OK)
 }
@@ -95,6 +116,14 @@ async fn delete_server(
     State(state): State<Arc<AppState>>,
     Path(id): Path<uuid::Uuid>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    if let Ok(row) = crate::db::get_server(&state.db, id).await {
+        crate::router::route_delete(
+            &state.http,
+            &state.cfg.router_api,
+            &format!("{}.{}", row.subdomain, state.cfg.base_domain),
+        )
+        .await;
+    }
     let _ = docker::remove(&state.docker, id).await;
     Ok(StatusCode::OK)
 }

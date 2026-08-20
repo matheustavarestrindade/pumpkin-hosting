@@ -26,7 +26,7 @@
 </script>
 
 <Sidebar.Provider>
-	<AppSidebar user={data.user} />
+	<AppSidebar user={data.user} isAdmin={data.isAdmin} />
 	<Sidebar.Inset>
 		<!-- mobile top bar -->
 		<header class="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4 md:hidden">

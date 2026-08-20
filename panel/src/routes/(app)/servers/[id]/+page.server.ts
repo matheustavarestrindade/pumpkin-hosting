@@ -20,14 +20,23 @@ async function getOwnedServer(id: string, userId: string) {
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const user = requireUser(locals);
-	const { server } = await getOwnedServer(params.id, user.id);
+	const { server, node } = await getOwnedServer(params.id, user.id);
 	const [userRow] = await db
 		.select({ stripeCustomerId: userTable.stripeCustomerId })
 		.from(userTable)
 		.where(eq(userTable.id, user.id))
 		.limit(1);
+
+	// Best-effort live container state: a "running" server whose container is
+	// stopped is asleep (auto-sleep). Agent unreachable -> just show DB status.
+	let containerStatus: string | null = null;
+	try {
+		containerStatus = (await agent.serverStatus(node, server)).status;
+	} catch {}
+
 	return {
 		server,
+		containerStatus,
 		billing: {
 			enabled: billingEnabled,
 			hasCustomer: Boolean(userRow?.stripeCustomerId)
