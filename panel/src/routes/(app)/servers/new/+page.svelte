@@ -130,7 +130,7 @@
 			<p class="text-sm text-destructive">{form.error}</p>
 		{/if}
 
-		<div class="sticky bottom-20 md:bottom-6">
+		<div class="mt-6">
 			<Button
 				type="submit"
 				size="lg" class="w-full"

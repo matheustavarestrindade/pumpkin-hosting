@@ -8,7 +8,6 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import * as Select from '$lib/components/ui/select';
-	import Switch from '$lib/components/ui/switch/switch.svelte';
 	import FriendsEditor from '$lib/components/server/FriendsEditor.svelte';
 	import BlocksIcon from '@lucide/svelte/icons/blocks';
 	import CheckIcon from '@lucide/svelte/icons/check';
@@ -153,31 +152,43 @@
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-3">
-			<label class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background p-3 transition-colors hover:bg-muted/50">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+			<button
+				type="button"
+				onclick={() => (allowlistEnabled = !allowlistEnabled)}
+				class="relative flex w-full items-center gap-3 rounded-xl border p-3 pr-16 text-left transition-colors {allowlistEnabled
+					? 'border-primary/40 bg-primary/10'
+					: 'border-destructive/40 bg-destructive/10'}"
+			>
+				<Badge class="absolute top-3 right-3 border-transparent {allowlistEnabled ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}">
+					{allowlistEnabled ? 'On' : 'Off'}
+				</Badge>
+				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg {allowlistEnabled ? 'bg-primary/15 text-primary' : 'bg-destructive/15 text-destructive'}">
 					<ShieldIcon class="size-5" />
 				</span>
 				<span class="min-w-0 flex-1">
 					<span class="block text-sm font-medium text-foreground">Friends Only</span>
-					<span class="block text-xs text-muted-foreground">
-						{allowlistEnabled ? 'On - only approved players can join' : 'Off - anyone can join'}
-					</span>
+					<span class="block text-xs text-muted-foreground">Only approved players can join</span>
 				</span>
-				<Switch bind:checked={allowlistEnabled} aria-label="Friends only" />
-			</label>
+			</button>
 
-			<label class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background p-3 transition-colors hover:bg-muted/50">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+			<button
+				type="button"
+				onclick={() => (pvp = !pvp)}
+				class="relative flex w-full items-center gap-3 rounded-xl border p-3 pr-16 text-left transition-colors {pvp
+					? 'border-primary/40 bg-primary/10'
+					: 'border-destructive/40 bg-destructive/10'}"
+			>
+				<Badge class="absolute top-3 right-3 border-transparent {pvp ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}">
+					{pvp ? 'On' : 'Off'}
+				</Badge>
+				<span class="flex size-10 shrink-0 items-center justify-center rounded-lg {pvp ? 'bg-primary/15 text-primary' : 'bg-destructive/15 text-destructive'}">
 					<SwordsIcon class="size-5" />
 				</span>
 				<span class="min-w-0 flex-1">
 					<span class="block text-sm font-medium text-foreground">PvP</span>
-					<span class="block text-xs text-muted-foreground">
-						{pvp ? 'On - players can hurt each other' : 'Off - players cannot hurt each other'}
-					</span>
+					<span class="block text-xs text-muted-foreground">Players can hurt each other</span>
 				</span>
-				<Switch bind:checked={pvp} aria-label="PvP" />
-			</label>
+			</button>
 		</Card.Content>
 	</Card.Root>
 
