@@ -16,6 +16,8 @@
 		"seed": "node scripts/seed.mjs"
 	},
 	"devDependencies": {
+		"@internationalized/date": "^3.12.3",
+		"@lucide/svelte": "^1.33.0",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/adapter-node": "^5.5.7",
 		"@sveltejs/kit": "^2.63.0",
@@ -30,8 +32,13 @@
 	},
 	"dependencies": {
 		"better-auth": "^1.7.1",
+		"bits-ui": "^2.18.2",
+		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.45.2",
+		"lucide-svelte": "^1.0.1",
 		"pg": "^8.23.0",
-		"stripe": "^22.5.0"
+		"stripe": "^22.5.0",
+		"tailwind-merge": "^3.6.0",
+		"tailwind-variants": "^3.3.1"
 	}
 }

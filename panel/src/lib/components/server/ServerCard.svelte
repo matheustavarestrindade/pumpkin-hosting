@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Card from '$lib/components/ui/card';
 	import StatusDot from '$lib/components/server/StatusDot.svelte';
+	import CopyIcon from '@lucide/svelte/icons/copy';
+	import CheckIcon from '@lucide/svelte/icons/check';
 	import type { servers } from '$lib/server/db/schema';
 
 	type Server = typeof servers.$inferSelect;
@@ -19,46 +21,49 @@
 	let actionLoading = $state(false);
 	let copied = $state(false);
 
-	const statusColor = {
-		running: 'green',
-		provisioning: 'yellow',
-		starting: 'yellow',
-		stopping: 'yellow',
-		stopped: 'gray',
-		error: 'red',
-		suspended: 'red'
-	} as const;
+	async function copyAddress() {
+		await navigator.clipboard.writeText(address);
+		copied = true;
+		setTimeout(() => (copied = false), 1500);
+	}
+
+	const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+		running: 'default',
+		provisioning: 'secondary',
+		starting: 'secondary',
+		stopping: 'secondary',
+		stopped: 'outline',
+		error: 'destructive',
+		suspended: 'destructive'
+	};
 </script>
 
-<Card>
-	<div class="flex items-start justify-between">
-		<div class="flex items-center gap-2">
-			<StatusDot status={server.status} />
-			<button
-				onclick={() => goto(`/servers/${server.id}`)}
-				class="font-semibold text-mc-text hover:underline"
-			>
-				{server.name}
-			</button>
+<Card.Root class="transition-colors hover:border-foreground/20">
+	<Card.Header class="pb-3">
+		<div class="flex items-start justify-between gap-2">
+			<div class="flex items-center gap-2 min-w-0">
+				<StatusDot status={server.status} />
+				<button
+					onclick={() => goto(`/servers/${server.id}`)}
+					class="truncate font-semibold text-foreground hover:underline"
+				>
+					{server.name}
+				</button>
+			</div>
+			<Badge variant={statusVariant[server.status] ?? 'outline'}>{server.status}</Badge>
 		</div>
-		<Badge color={statusColor[server.status]}>{server.status}</Badge>
-	</div>
-
-	<p class="mt-2 font-mono text-sm text-mc-muted">
-		<button
-			onclick={async () => {
-				await navigator.clipboard.writeText(address);
-				copied = true;
-				setTimeout(() => (copied = false), 1500);
-			}}
-			class="cursor-pointer rounded px-1 -mx-1 transition-colors hover:bg-mc-border/50 hover:text-mc-accent"
-			title="Click to copy"
-		>
-			{copied ? 'Copied!' : address}
-		</button>
-	</p>
-
-	<div class="mt-4 flex items-center gap-2">
+	</Card.Header>
+	<Card.Content class="pb-3">
+		<div class="flex items-center gap-1">
+			<code class="min-w-0 truncate rounded-md border border-border bg-background px-2 py-1 font-mono text-sm text-primary">
+				{address}
+			</code>
+			<Button variant="ghost" size="icon-sm" onclick={copyAddress} title="Copy address">
+				{#if copied}<CheckIcon class="text-primary" />{:else}<CopyIcon />{/if}
+			</Button>
+		</div>
+	</Card.Content>
+	<Card.Footer class="gap-2">
 		<form
 			method="POST"
 			action="/servers/{server.id}?/power"
@@ -70,14 +75,14 @@
 				};
 			}}
 		>
-			{#if server.status === 'stopped'}
-				<Button size="sm" type="submit" name="action" value="start" loading={actionLoading}>Start</Button>
+			{#if server.status === 'stopped' || server.status === 'error'}
+				<Button size="sm" type="submit" name="action" value="start" disabled={actionLoading}>Start</Button>
 			{:else if server.status === 'running'}
-				<Button size="sm" variant="secondary" type="submit" name="action" value="stop" loading={actionLoading}>
+				<Button size="sm" variant="secondary" type="submit" name="action" value="stop" disabled={actionLoading}>
 					Stop
 				</Button>
 			{/if}
 		</form>
-		<Button size="sm" variant="ghost" onclick={() => goto(`/servers/${server.id}`)}>Manage</Button>
-	</div>
-</Card>
+		<Button size="sm" variant="ghost" href="/servers/{server.id}">Manage</Button>
+	</Card.Footer>
+</Card.Root>

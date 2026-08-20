@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import { enhance } from '$app/forms';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Card from '$lib/components/ui/card';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
 	import TypeSelectCard from '$lib/components/server/TypeSelectCard.svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -60,8 +61,8 @@
 	<title>New server - hosting-mc</title>
 </svelte:head>
 
-<h1 class="text-xl font-bold text-mc-text">Create a server</h1>
-<p class="mt-1 text-sm text-mc-muted">Name it, pick a type, done.</p>
+<h1 class="text-xl font-bold text-foreground">Create a server</h1>
+<p class="mt-1 text-sm text-muted-foreground">Name it, pick a type, done.</p>
 
 <form
 	method="POST"
@@ -80,28 +81,28 @@
 
 	<div class="flex flex-col gap-6">
 		<section>
-			<label for="name" class="text-sm font-medium text-mc-text">Server name</label>
-			<div class="mt-1.5">
+			<Label for="name">Server name</Label>
+			<div class="mt-2">
 				<Input id="name" name="name" bind:value={name} placeholder="Steve's world" maxlength={32} required />
 			</div>
 			{#if subdomain}
 				<div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-sm">
-					<span class="rounded border border-mc-border bg-mc-surface px-2 py-1 text-mc-accent">
+					<span class="rounded-md border border-border bg-card px-2 py-1 text-primary">
 						{subdomain}.{baseDomain}
 					</span>
 					{#if checking}
-						<span class="text-xs text-mc-muted">Checking...</span>
+						<span class="text-xs text-muted-foreground">Checking...</span>
 					{:else if availability?.available}
-						<span class="text-xs text-green-400">Available</span>
+						<span class="text-xs text-primary">Available</span>
 					{:else if availability}
-						<span class="text-xs text-red-400">{availability.reason}</span>
+						<span class="text-xs text-destructive">{availability.reason}</span>
 					{/if}
 				</div>
 			{/if}
 		</section>
 
 		<section>
-			<p class="text-sm font-medium text-mc-text">Server type</p>
+			<p class="text-sm font-medium text-foreground">Server type</p>
 			<div class="mt-2 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
 				{#each types as t (t.id)}
 					<TypeSelectCard
@@ -116,34 +117,38 @@
 		</section>
 	</div>
 
-	<Card class="h-fit lg:sticky lg:top-6">
-		<h2 class="font-semibold text-mc-text">Summary</h2>
-		<dl class="mt-3 space-y-2 text-sm">
-			<div class="flex justify-between gap-2">
-				<dt class="text-mc-muted">Name</dt>
-				<dd class="truncate text-mc-text">{name || '-'}</dd>
-			</div>
-			<div class="flex justify-between gap-2">
-				<dt class="text-mc-muted">Address</dt>
-				<dd class="truncate font-mono text-mc-accent">{subdomain ? `${subdomain}.${baseDomain}` : '-'}</dd>
-			</div>
-			<div class="flex justify-between gap-2">
-				<dt class="text-mc-muted">Type</dt>
-				<dd class="capitalize text-mc-text">{selectedType}</dd>
-			</div>
-			<div class="flex justify-between gap-2 border-t border-mc-border pt-2">
-				<dt class="text-mc-muted">Price</dt>
-				<dd class="text-mc-text">{price}/month</dd>
-			</div>
-		</dl>
+	<Card.Root class="h-fit lg:sticky lg:top-20">
+		<Card.Header>
+			<Card.Title class="text-base">Summary</Card.Title>
+		</Card.Header>
+		<Card.Content>
+			<dl class="space-y-2 text-sm">
+				<div class="flex justify-between gap-2">
+					<dt class="text-muted-foreground">Name</dt>
+					<dd class="truncate text-foreground">{name || '-'}</dd>
+				</div>
+				<div class="flex justify-between gap-2">
+					<dt class="text-muted-foreground">Address</dt>
+					<dd class="truncate font-mono text-primary">{subdomain ? `${subdomain}.${baseDomain}` : '-'}</dd>
+				</div>
+				<div class="flex justify-between gap-2">
+					<dt class="text-muted-foreground">Type</dt>
+					<dd class="capitalize text-foreground">{selectedType}</dd>
+				</div>
+				<div class="flex justify-between gap-2 border-t border-border pt-2">
+					<dt class="text-muted-foreground">Price</dt>
+					<dd class="text-foreground">{price}/month</dd>
+				</div>
+			</dl>
 
-		{#if form?.error}
-			<p class="mt-3 text-sm text-red-400">{form.error}</p>
-		{/if}
+			{#if form?.error}
+				<p class="mt-3 text-sm text-destructive">{form.error}</p>
+			{/if}
 
-		<Button type="submit" class="mt-5 w-full" disabled={!availability?.available} loading={submitting}>
-			Create server
-		</Button>
-		<p class="mt-3 text-center text-xs text-mc-muted">Up to 10 players. Cancel anytime.</p>
-	</Card>
+			<Button type="submit" class="mt-5 w-full" disabled={!availability?.available || submitting}>
+				{submitting ? 'Creating...' : 'Create server'}
+			</Button>
+			<p class="mt-3 text-center text-xs text-muted-foreground">Up to 10 players. Cancel anytime.</p>
+		</Card.Content>
+	</Card.Root>
 </form>

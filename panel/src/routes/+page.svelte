@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Card from '$lib/components/ui/card';
 	import Navbar from '$lib/components/ui/Navbar.svelte';
 
 	const features = [
@@ -14,11 +14,11 @@
 		},
 		{
 			title: 'Simple settings',
-			desc: 'Difficulty, allowlist, game mode — a few switches, no config files, no wiki required.'
+			desc: 'Difficulty, friends list, game mode — a few switches, no config files, no wiki required.'
 		},
 		{
 			title: 'Invite only friends',
-			desc: 'Built-in allowlist. Only the people you add can join your world.'
+			desc: 'Built-in friends list. Only the people you add can join your world.'
 		},
 		{
 			title: 'Download your world',
@@ -33,65 +33,76 @@
 
 <Navbar>
 	{#snippet right()}
-		<a href="/login" class="text-sm text-mc-muted hover:text-mc-text">Log in</a>
-		<Button size="sm" onclick={() => (window.location.href = '/register')}>Sign up</Button>
+		<Button variant="ghost" size="sm" href="/login">Log in</Button>
+		<Button size="sm" href="/register">Sign up</Button>
 	{/snippet}
 </Navbar>
 
 <main>
-	<section class="mx-auto max-w-6xl px-4 py-24 text-center">
-		<h1 class="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-mc-text">
+	<section class="mx-auto max-w-6xl px-4 py-20 text-center sm:py-28">
+		<h1 class="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
 			A Minecraft server for you and your friends, in one click
 		</h1>
-		<p class="mx-auto mt-4 max-w-xl text-lg text-mc-muted">
+		<p class="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
 			No config files. No port forwarding. No command line. Pick a name and play.
 		</p>
-		<div class="mt-8 flex items-center justify-center gap-3">
-			<Button onclick={() => (window.location.href = '/register')}>Create your server</Button>
-			<Button variant="secondary" onclick={() => (window.location.href = '#pricing')}>See pricing</Button>
+		<div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+			<Button size="lg" href="/register" class="w-full sm:w-auto">Create your server</Button>
+			<Button size="lg" variant="outline" href="#pricing" class="w-full sm:w-auto">See pricing</Button>
 		</div>
-		<p class="mt-6 font-mono text-sm text-mc-muted">
+		<p class="mt-8 font-mono text-sm text-muted-foreground">
 			your server address:
-			<span class="rounded border border-mc-border bg-mc-surface px-2 py-1 text-mc-accent">steve.example.com</span>
+			<span class="rounded-md border border-border bg-card px-2 py-1 text-primary">steve.example.com</span>
 		</p>
 	</section>
 
-	<section class="border-t border-mc-border">
+	<section class="border-t border-border">
 		<div class="mx-auto grid max-w-6xl gap-4 px-4 py-16 sm:grid-cols-2 lg:grid-cols-3">
 			{#each features as f (f.title)}
-				<Card>
-					<h3 class="font-semibold text-mc-text">{f.title}</h3>
-					<p class="mt-1.5 text-sm text-mc-muted">{f.desc}</p>
-				</Card>
+				<Card.Root>
+					<Card.Header>
+						<Card.Title class="text-base">{f.title}</Card.Title>
+						<Card.Description>{f.desc}</Card.Description>
+					</Card.Header>
+				</Card.Root>
 			{/each}
 		</div>
 	</section>
 
-	<section id="pricing" class="border-t border-mc-border">
+	<section id="pricing" class="border-t border-border">
 		<div class="mx-auto max-w-6xl px-4 py-16">
-			<h2 class="text-center text-2xl font-bold text-mc-text">One plan. That's it.</h2>
-			<p class="mt-2 text-center text-mc-muted">Everything you need to play with friends.</p>
-			<Card class="mx-auto mt-8 max-w-sm">
-				<div class="flex items-baseline justify-between">
-					<h3 class="text-lg font-semibold text-mc-text">Friends</h3>
-					<p class="text-mc-text"><span class="text-2xl font-bold">R$10</span> <span class="text-sm text-mc-muted">/month</span></p>
-				</div>
-				<ul class="mt-4 space-y-2 text-sm text-mc-muted">
-					<li>Up to 10 players</li>
-					<li>Custom address (yourexample.com)</li>
-					<li>Survival, Creative, Hardcore or Flat</li>
-					<li>Allowlist for your friends</li>
-					<li>World download anytime</li>
-					<li>Cancel anytime</li>
-				</ul>
-				<Button class="mt-6 w-full" onclick={() => (window.location.href = '/register')}>Get started</Button>
-			</Card>
+			<h2 class="text-center text-2xl font-bold text-foreground">One plan. That's it.</h2>
+			<p class="mt-2 text-center text-muted-foreground">Everything you need to play with friends.</p>
+			<Card.Root class="mx-auto mt-8 max-w-sm">
+				<Card.Header>
+					<div class="flex items-baseline justify-between">
+						<Card.Title>Friends</Card.Title>
+						<p class="text-foreground">
+							<span class="text-2xl font-bold">R$10</span>
+							<span class="text-sm text-muted-foreground">/month</span>
+						</p>
+					</div>
+				</Card.Header>
+				<Card.Content>
+					<ul class="space-y-2 text-sm text-muted-foreground">
+						<li>Up to 10 players</li>
+						<li>Custom address (steve.example.com)</li>
+						<li>Survival, Creative, Hardcore or Flat</li>
+						<li>Friends list for your buddies</li>
+						<li>World download anytime</li>
+						<li>Cancel anytime</li>
+					</ul>
+				</Card.Content>
+				<Card.Footer>
+					<Button class="w-full" href="/register">Get started</Button>
+				</Card.Footer>
+			</Card.Root>
 		</div>
 	</section>
 </main>
 
-<footer class="border-t border-mc-border">
-	<div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-mc-muted">
+<footer class="border-t border-border">
+	<div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-muted-foreground">
 		<span>hosting-mc</span>
 		<span>Not affiliated with Mojang or Microsoft.</span>
 	</div>

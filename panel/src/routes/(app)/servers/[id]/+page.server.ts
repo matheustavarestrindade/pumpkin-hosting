@@ -90,13 +90,12 @@ export const actions: Actions = {
 		const { server, node } = await getOwnedServer(params.id, requireUser(locals).id);
 		const form = await request.formData();
 
-		const allowlistRaw = String(form.get('allowlist') ?? '');
 		const settings: ServerSettings = {
 			...server.settings,
 			allowlistEnabled: form.get('allowlistEnabled') === 'on',
-			allowlist: allowlistRaw
-				.split('\n')
-				.map((s) => s.trim())
+			allowlist: form
+				.getAll('friend')
+				.map((s) => String(s).trim())
 				.filter((s) => /^[A-Za-z0-9_]{3,16}$/.test(s))
 		};
 

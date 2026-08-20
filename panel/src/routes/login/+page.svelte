@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Card from '$lib/components/ui/card';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
 	import Navbar from '$lib/components/ui/Navbar.svelte';
 
 	let email = $state('');
@@ -27,25 +28,36 @@
 
 <Navbar />
 
-<main class="mx-auto flex max-w-sm flex-col px-4 py-24">
-	<Card>
-		<h1 class="text-lg font-semibold text-mc-text">Log in</h1>
-		<form onsubmit={submit} class="mt-4 flex flex-col gap-4">
-			<Input label="Email" type="email" bind:value={email} required autocomplete="email" />
-			<Input
-				label="Password"
-				type="password"
-				bind:value={password}
-				required
-				autocomplete="current-password"
-			/>
-			{#if error}
-				<p class="text-sm text-red-400">{error}</p>
-			{/if}
-			<Button type="submit" {loading}>Log in</Button>
-		</form>
-	</Card>
-	<p class="mt-4 text-center text-sm text-mc-muted">
-		No account? <a href="/register" class="text-mc-accent hover:underline">Sign up</a>
+<main class="mx-auto flex max-w-sm flex-col px-4 py-16 sm:py-24">
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Log in</Card.Title>
+			<Card.Description>Access your servers</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<form onsubmit={submit} class="flex flex-col gap-4">
+				<div class="flex flex-col gap-2">
+					<Label for="email">Email</Label>
+					<Input id="email" type="email" bind:value={email} required autocomplete="email" />
+				</div>
+				<div class="flex flex-col gap-2">
+					<Label for="password">Password</Label>
+					<Input
+						id="password"
+						type="password"
+						bind:value={password}
+						required
+						autocomplete="current-password"
+					/>
+				</div>
+				{#if error}
+					<p class="text-sm text-destructive">{error}</p>
+				{/if}
+				<Button type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Log in'}</Button>
+			</form>
+		</Card.Content>
+	</Card.Root>
+	<p class="mt-4 text-center text-sm text-muted-foreground">
+		No account? <a href="/register" class="text-primary hover:underline">Sign up</a>
 	</p>
 </main>
