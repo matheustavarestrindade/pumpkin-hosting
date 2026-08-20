@@ -139,60 +139,60 @@
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-3">
-			<div
-				class="relative flex flex-col gap-3 rounded-xl border p-3 transition-colors {running
-					? 'border-primary/40 bg-primary/10'
-					: 'border-destructive/40 bg-destructive/10'}"
+			<form
+				method="POST"
+				action="?/power"
+				use:enhance={() => {
+					powerBusy = true;
+					return async ({ update }) => {
+						powerBusy = false;
+						await update();
+					};
+				}}
 			>
-				<Badge
-					class="absolute top-3 right-3 border-transparent {running
-						? 'bg-primary text-primary-foreground'
-						: 'bg-destructive text-destructive-foreground'}"
+				<button
+					type="submit"
+					name="action"
+					value={running ? 'stop' : 'start'}
+					disabled={busy || powerBusy}
+					class="relative flex w-full items-center gap-3 rounded-xl border p-3 pr-16 text-left transition-colors disabled:cursor-wait {running
+						? 'border-primary/40 bg-primary/10'
+						: 'border-destructive/40 bg-destructive/10'}"
 				>
-					{running ? 'Online' : busy ? (statusLabel[data.server.status] ?? 'Working') : 'Offline'}
-				</Badge>
-				<div class="flex items-center gap-3">
+					<Badge
+						class="absolute top-3 right-3 border-transparent {running
+							? 'bg-primary text-primary-foreground'
+							: 'bg-destructive text-destructive-foreground'}"
+					>
+						{running ? 'Online' : 'Offline'}
+					</Badge>
 					<span
 						class="flex size-10 shrink-0 items-center justify-center rounded-lg {running
 							? 'bg-primary/15 text-primary'
 							: 'bg-destructive/15 text-destructive'}"
 					>
-						<PowerIcon class="size-5" />
+						{#if busy || powerBusy}
+							<LoaderCircleIcon class="size-5 animate-spin" />
+						{:else}
+							<PowerIcon class="size-5" />
+						{/if}
 					</span>
 					<span class="min-w-0 flex-1">
 						<span class="block text-sm font-medium text-foreground">Server Status</span>
 						<span class="block text-xs text-muted-foreground">
-							{running ? 'Players can join' : busy ? 'Changing state...' : 'Players cannot join'}
+							{#if powerBusy}
+								{running ? 'Stopping...' : 'Starting...'}
+							{:else if busy}
+								{statusLabel[data.server.status]}...
+							{:else if running}
+								Players can join - click to stop
+							{:else}
+								Players cannot join - click to start
+							{/if}
 						</span>
 					</span>
-				</div>
-				<form
-					method="POST"
-					action="?/power"
-					class="self-end"
-					use:enhance={() => {
-						powerBusy = true;
-						return async ({ update }) => {
-							powerBusy = false;
-							await update();
-						};
-					}}
-				>
-					{#if stopped}
-						<Button type="submit" name="action" value="start" size="sm" disabled={powerBusy}>
-							{#if powerBusy}<LoaderCircleIcon class="animate-spin" /> Starting...{:else}Start{/if}
-						</Button>
-					{:else if running}
-						<Button type="submit" name="action" value="stop" variant="secondary" size="sm" disabled={powerBusy}>
-							{#if powerBusy}<LoaderCircleIcon class="animate-spin" /> Stopping...{:else}Stop{/if}
-						</Button>
-					{:else}
-						<Button size="sm" disabled>
-							<LoaderCircleIcon class="animate-spin" /> {statusLabel[data.server.status] ?? 'Working'}...
-						</Button>
-					{/if}
-				</form>
-			</div>
+				</button>
+			</form>
 
 			<button
 				type="button"
