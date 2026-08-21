@@ -2,6 +2,7 @@ mod auth;
 mod config;
 mod db;
 mod docker;
+mod mcquery;
 mod reconcile;
 mod router;
 mod routes;

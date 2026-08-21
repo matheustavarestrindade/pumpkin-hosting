@@ -8,12 +8,13 @@
 	import FlameIcon from '@lucide/svelte/icons/flame';
 	import LayersIcon from '@lucide/svelte/icons/layers';
 	import SwordsIcon from '@lucide/svelte/icons/swords';
+	import UsersIcon from '@lucide/svelte/icons/users';
 	import type { servers } from '$lib/server/db/schema';
 
 	type Server = typeof servers.$inferSelect;
 
 	type Props = {
-		server: Server & { containerStatus?: string | null };
+		server: Server & { containerStatus?: string | null; players?: { online: number; max: number } | null };
 		address: string;
 	};
 
@@ -68,10 +69,15 @@
 		<span class="mt-0.5 block truncate text-sm text-muted-foreground">
 			<span class="capitalize">{server.type}</span> · {address}
 		</span>
-		<span class="mt-1.5 inline-flex">
+		<span class="mt-1.5 inline-flex items-center gap-1.5">
 			<Badge class={cn('px-2 py-0.5 text-xs', statusClass[displayStatus])}>
 				{statusLabel[displayStatus]?.() ?? displayStatus}
 			</Badge>
+			{#if server.players}
+				<Badge variant="secondary" class="gap-1 px-2 py-0.5 text-xs">
+					<UsersIcon class="size-3" /> {server.players.online}/{server.players.max}
+				</Badge>
+			{/if}
 		</span>
 	</span>
 

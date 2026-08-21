@@ -162,7 +162,16 @@ async fn server_status(
         Some(false) => "stopped",
         None => "missing",
     };
-    Json(serde_json::json!({ "status": status, "playersOnline": null }))
+    // When running, also do a real Minecraft status ping for player counts.
+    let players = if running == Some(true) {
+        match crate::mcquery::ping(&docker::container_name(id), 25565).await {
+            Ok(p) => serde_json::json!({ "online": p.players_online, "max": p.players_max }),
+            Err(_) => serde_json::Value::Null,
+        }
+    } else {
+        serde_json::Value::Null
+    };
+    Json(serde_json::json!({ "status": status, "players": players }))
 }
 
 async fn download_world(

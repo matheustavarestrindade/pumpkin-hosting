@@ -49,6 +49,9 @@ Seed once after a fresh DB: `docker compose exec panel node scripts/seed.mjs`.
 
 ## Gotchas learned the hard way
 
+- The agent must be on BOTH the stack network and `mc-net` (it pings game
+  containers by name for player counts). Router also joins both.
+
 1. **Postgres enums + sqlx**: cast to text in queries (`status::text as status`),
    or decoding to String fails silently.
 2. **Agent empty responses**: endpoints returning `StatusCode::OK` have no body.

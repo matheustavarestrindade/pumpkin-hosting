@@ -23,6 +23,7 @@
 	import SwordsIcon from '@lucide/svelte/icons/swords';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import UserPlusIcon from '@lucide/svelte/icons/user-plus';
+	import UsersIcon from '@lucide/svelte/icons/users';
 	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -130,6 +131,11 @@
 			<div class="flex items-center gap-2">
 				<h1 class="truncate text-xl font-bold text-foreground">{data.server.name}</h1>
 				<Badge class={statusClass[displayStatus]}>{statusLabel[displayStatus]?.() ?? displayStatus}</Badge>
+				{#if data.players}
+					<Badge variant="secondary" class="gap-1">
+						<UsersIcon class="size-3" /> {data.players.online}/{data.players.max}
+					</Badge>
+				{/if}
 			</div>
 			<button
 				onclick={copyAddress}

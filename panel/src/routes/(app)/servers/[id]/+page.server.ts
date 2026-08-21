@@ -31,13 +31,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Best-effort live container state: a "running" server whose container is
 	// stopped is asleep (auto-sleep). Agent unreachable -> just show DB status.
 	let containerStatus: string | null = null;
+	let players: { online: number; max: number } | null = null;
 	try {
-		containerStatus = (await agent.serverStatus(node, server)).status;
+		const live = await agent.serverStatus(node, server);
+		containerStatus = live.status;
+		players = live.players;
 	} catch {}
 
 	return {
 		server,
 		containerStatus,
+		players,
 		billing: {
 			enabled: billingEnabled,
 			hasCustomer: Boolean(userRow?.stripeCustomerId)

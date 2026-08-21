@@ -47,7 +47,7 @@ export const agent = {
 		call(node, `/api/servers/${server.id}/settings`, 'PUT', settings),
 
 	serverStatus: (node: Node, server: Server) =>
-		call<{ status: string; playersOnline: number | null }>(node, `/api/servers/${server.id}/status`),
+		call<{ status: string; players: { online: number; max: number } | null }>(node, `/api/servers/${server.id}/status`),
 
 	downloadWorld: (node: Node, server: Server) =>
 		fetch(`${node.apiUrl}/api/servers/${server.id}/world.zip`, {

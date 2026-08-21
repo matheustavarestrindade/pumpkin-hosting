@@ -19,10 +19,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const list = await Promise.all(
 		rows.map(async ({ server, node }) => {
 			let containerStatus: string | null = null;
+			let players: { online: number; max: number } | null = null;
 			try {
-				containerStatus = (await agent.serverStatus(node, server)).status;
+				const live = await agent.serverStatus(node, server);
+				containerStatus = live.status;
+				players = live.players;
 			} catch {}
-			return { ...server, containerStatus };
+			return { ...server, containerStatus, players };
 		})
 	);
 	return { servers: list };
