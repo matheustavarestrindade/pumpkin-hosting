@@ -203,8 +203,12 @@
 </main>
 
 <footer class="border-t border-border">
-	<div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-muted-foreground">
+	<div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted-foreground">
 		<span>hosting-mc</span>
-		<span>{m.landing_footer_disclaimer()}</span>
+		<span class="flex items-center gap-4">
+			<a href="/terms" class="hover:text-foreground hover:underline">{m.legal_terms_title()}</a>
+			<a href="/privacy" class="hover:text-foreground hover:underline">{m.legal_privacy_title()}</a>
+			<span>{m.landing_footer_disclaimer()}</span>
+		</span>
 	</div>
 </footer>
