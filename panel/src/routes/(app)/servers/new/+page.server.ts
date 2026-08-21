@@ -4,8 +4,8 @@ import { db } from '$lib/server/db';
 import { nodes, plans, servers, user as userTable } from '$lib/server/db/schema';
 import { requireUser } from '$lib/server/guard';
 import { billingEnabled, createCheckout, getOrCreateCustomer } from '$lib/server/stripe';
+import { generateUniqueSlug } from '$lib/server/slugs';
 import { defaultSettings } from '$lib/server-settings';
-import { validateSubdomain } from '$lib/subdomains';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
@@ -20,23 +20,16 @@ export const actions: Actions = {
 	create: async ({ request, locals, url }) => {
 		const user = requireUser(locals);
 		const form = await request.formData();
-		const subdomain = String(form.get('subdomain') ?? '').toLowerCase();
-		const name = String(form.get('name') ?? '').trim();
 		const type = String(form.get('type') ?? '');
 
-		if (!name) return fail(400, { error: m.new_error_name() });
 		if (!['survival', 'creative', 'hardcore', 'flat'].includes(type)) {
 			return fail(400, { error: m.new_error_type() });
 		}
-		const valid = validateSubdomain(subdomain);
-		if (!valid.ok) return fail(400, { error: valid.reason });
 
-		const taken = await db
-			.select({ id: servers.id })
-			.from(servers)
-			.where(eq(servers.subdomain, subdomain))
-			.limit(1);
-		if (taken.length > 0) return fail(400, { error: m.subdomain_taken() });
+		// Name/address is generated: friendly adjective-noun slug, unique in the DB.
+		const slug = await generateUniqueSlug();
+		const name = slug;
+		const subdomain = slug;
 
 		const [plan] = await db.select().from(plans).where(eq(plans.active, true)).limit(1);
 		if (!plan) return fail(500, { error: m.new_error_no_plan() });

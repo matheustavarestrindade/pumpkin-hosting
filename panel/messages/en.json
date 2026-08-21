@@ -51,16 +51,10 @@
 	"status_suspended": "Suspended",
 	"new_title": "New Adventure",
 	"new_sub": "Configure your new Minecraft server.",
-	"new_name_label": "Server Name",
-	"new_name_placeholder": "e.g. The Overworld",
-	"new_checking": "Checking...",
-	"new_available": "Available",
 	"new_gamemode_label": "Select Gamemode",
 	"new_launch": "Launch Server · {price}/month",
 	"new_launching": "Launching...",
-	"new_error_name": "Name is required",
 	"new_error_type": "Invalid server type",
-	"new_error_subdomain": "Subdomain is not available",
 	"new_error_no_nodes": "No capacity right now - try again later",
 	"new_error_no_plan": "No plan configured",
 	"type_survival": "Survival",
@@ -221,5 +215,6 @@
 	"landing_faq4_a": "Yes. Download your whole world as a file anytime - even after canceling. It's your world, not ours.",
 	"landing_final_title": "Your friends are waiting",
 	"landing_final_sub": "Pick a name now, be playing together before your next snack.",
-	"landing_footer_disclaimer": "Not affiliated with Mojang or Microsoft."
+	"landing_footer_disclaimer": "Not affiliated with Mojang or Microsoft.",
+	"new_random_hint": "We'll give your server a fun address automatically - you can share it the second it's ready."
 }

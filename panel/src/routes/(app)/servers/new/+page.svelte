@@ -1,18 +1,13 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages';
-	import { env } from '$env/dynamic/public';
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Card from '$lib/components/ui/card';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import TypeSelectCard from '$lib/components/server/TypeSelectCard.svelte';
 	import RocketIcon from '@lucide/svelte/icons/rocket';
+	import SparklesIcon from '@lucide/svelte/icons/sparkles';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
-
-	const baseDomain = env.PUBLIC_BASE_DOMAIN ?? 'example.com';
 
 	const types = $derived([
 		{ id: 'survival', name: m.type_survival(), description: m.type_survival_desc(), image: '/images/types/survival.png' },
@@ -21,20 +16,8 @@
 		{ id: 'flat', name: m.type_flat(), description: m.type_flat_desc(), image: '/images/types/flat.png' }
 	] as const);
 
-	let name = $state('');
 	let selectedType = $state<string>('survival');
-	let checking = $state(false);
-	let availability = $state<{ available: boolean; reason?: string } | null>(null);
 	let submitting = $state(false);
-
-	const subdomain = $derived(
-		name
-			.toLowerCase()
-			.replace(/\s+/g, '-')
-			.replace(/[^a-z0-9-]/g, '')
-			.replace(/-+/g, '-')
-			.replace(/^-|-$/g, '')
-	);
 
 	const price = $derived(
 		new Intl.NumberFormat('pt-BR', {
@@ -42,21 +25,6 @@
 			currency: data.plan?.currency ?? 'brl'
 		}).format((data.plan?.priceCents ?? 1000) / 100)
 	);
-
-	let checkTimer: ReturnType<typeof setTimeout>;
-	$effect(() => {
-		if (!subdomain) {
-			availability = null;
-			return;
-		}
-		clearTimeout(checkTimer);
-		checkTimer = setTimeout(async () => {
-			checking = true;
-			const res = await fetch(`/api/subdomain?name=${encodeURIComponent(subdomain)}`);
-			availability = await res.json();
-			checking = false;
-		}, 300);
-	});
 </script>
 
 <svelte:head>
@@ -79,38 +47,7 @@
 		}}
 		class="mt-6 flex flex-col gap-8"
 	>
-		<input type="hidden" name="subdomain" value={subdomain} />
 		<input type="hidden" name="type" value={selectedType} />
-
-		<section>
-			<Label for="name" class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-				{m.new_name_label()}
-			</Label>
-			<div class="mt-2">
-				<Input
-					id="name"
-					name="name"
-					bind:value={name}
-					placeholder={m.new_name_placeholder()}
-					maxlength={32}
-					required
-				/>
-			</div>
-			{#if subdomain}
-				<div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-sm">
-					<span class="rounded-lg border border-border bg-card px-2 py-1 text-primary">
-						{subdomain}.{baseDomain}
-					</span>
-					{#if checking}
-						<span class="text-xs text-muted-foreground">{m.new_checking()}</span>
-					{:else if availability?.available}
-						<span class="text-xs font-medium text-primary">{m.new_available()}</span>
-					{:else if availability}
-						<span class="text-xs font-medium text-destructive">{availability.reason}</span>
-					{/if}
-				</div>
-			{/if}
-		</section>
 
 		<section>
 			<p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{m.new_gamemode_label()}</p>
@@ -127,18 +64,17 @@
 			</div>
 		</section>
 
+		<div class="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-3 text-sm text-muted-foreground">
+			<SparklesIcon class="size-4 shrink-0 text-primary" />
+			{m.new_random_hint()}
+		</div>
+
 		{#if form?.error}
 			<p class="text-sm text-destructive">{form.error}</p>
 		{/if}
 
-		<div class="mt-6">
-			<Button
-				type="submit"
-				size="lg" class="w-full"
-				disabled={!availability?.available || submitting}
-			>
-				<RocketIcon /> {submitting ? m.new_launching() : m.new_launch({ price })}
-			</Button>
-		</div>
+		<Button type="submit" size="lg" class="w-full" disabled={submitting}>
+			<RocketIcon /> {submitting ? m.new_launching() : m.new_launch({ price })}
+		</Button>
 	</form>
 </div>
